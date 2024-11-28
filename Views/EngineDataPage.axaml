@@ -1,0 +1,45 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ProjectBridge.Views.EngineDataPage">
+    
+    <UserControl.Styles>
+        <!-- option button styling -->
+        <Style Selector="Button.OptionButtonStyle">
+            <Setter Property="Height"
+                    Value="75"/>
+            <Setter Property="HorizontalAlignment"
+                    Value="Stretch"/>
+            <Setter Property="Margin"
+                    Value="5,5,5,5"/>
+            <Setter Property="Foreground"
+                    Value="#ADADAE"/>
+            <Setter Property="FontSize"
+                    Value="15"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <!-- Each column will take an equal share of the available space -->
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Background="#1E1E22"
+                    CornerRadius="6"
+                    Margin="6"/>
+            <Button Name="SetupEngineInstallsButton"
+                    Classes="OptionButtonStyle"
+                    Theme="{DynamicResource BorderlessButton}"/>
+            <Border Grid.Column="1" Background="#1E1E22"
+                    CornerRadius="6"
+                    Margin="6"/>
+            <Button Grid.Column="1" Name="SetupEngineProjectsButton"
+                    Classes="OptionButtonStyle"
+                    Theme="{DynamicResource BorderlessButton}"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
