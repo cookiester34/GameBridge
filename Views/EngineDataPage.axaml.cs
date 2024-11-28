@@ -10,8 +10,8 @@ public partial class EngineDataPage : UserControl
 		InitializeComponent();
 		SetupEngineSpecificText();
 	}
-	
-	private void SetupEngineSpecificText()
+
+	public void SetupEngineSpecificText()
 	{
 		var currentPage = UiDataManager.CurrentPage;
 		SetupEngineInstallsButton.Content = $"Setup {currentPage} Engine Installs Path!";
