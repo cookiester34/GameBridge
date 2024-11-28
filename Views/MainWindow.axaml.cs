@@ -3,22 +3,32 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ProjectBridge.Code;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace ProjectBridge.Views;
 
 public partial class MainWindow : Window
 {
+	private readonly EngineDataPage engineDataPage;
+	private readonly SettingsPage settingsPage;
+
 	private bool sideMenuVisible;
-	
+
 	public MainWindow()
 	{
 		InitializeComponent();
-		MainContent.Content = new EngineDataPage(); // Set initial content
-		MainContent.Margin = new Thickness(0, 40, 0, 0);
 		UpdateMainContentMargin(); // Set initial margin
+
+		MainContent.Content = engineDataPage = new EngineDataPage(); // Set initial content
+		MainContent.Margin = new Thickness(0, 40, 0, 0);
+
+		SettingsContent.Content = settingsPage = new SettingsPage();
+		SettingsContent.Margin = new Thickness(0, 40, 0, 0);
+
+		ToggleActivePage(true);
 	}
-	
+
 	private void OnPointerPressed(object sender, PointerPressedEventArgs e)
 	{
 		// Check if the left mouse button was pressed
@@ -28,7 +38,7 @@ public partial class MainWindow : Window
 			BeginMoveDrag(e);
 		}
 	}
-	
+
 	private void MinimizeWindow(object sender, RoutedEventArgs e)
 	{
 		WindowState = WindowState.Minimized; // Minimize the window
@@ -41,28 +51,35 @@ public partial class MainWindow : Window
 
 	private void SwitchEnginePage(object sender, RoutedEventArgs e)
 	{
-		var button = sender as Button;
-		if (button != null)
+		if (sender is not Button button) return;
+
+		var buttonContent = button.Content;
+		switch (buttonContent)
 		{
-			var buttonContent = button.Content;
-			switch (buttonContent)
-			{
-				case "Unity":
-					UiDataManager.CurrentPage = CurrentPage.Unity;
-					break;
-				case "Unreal":
-					UiDataManager.CurrentPage = CurrentPage.Unreal;
-					break;
-				case "Godot":
-					UiDataManager.CurrentPage = CurrentPage.Godot;
-					break;
-			}
+			case "Unity":
+				UiDataManager.CurrentPage = CurrentPage.Unity;
+				break;
+			case "Unreal":
+				UiDataManager.CurrentPage = CurrentPage.Unreal;
+				break;
+			case "Godot":
+				UiDataManager.CurrentPage = CurrentPage.Godot;
+				break;
 		}
+
+		engineDataPage.SetupEngineSpecificText();
+		ToggleActivePage(true);
 	}
 
 	private void NavigateToSettings(object sender, RoutedEventArgs e)
 	{
-		SettingsContent.Content = SettingsContent.Content == null ? new SettingsPage() : null;
+		ToggleActivePage(false);
+	}
+
+	private void ToggleActivePage(bool mainPageActive)
+	{
+		SettingsContent.IsVisible = !mainPageActive;
+		MainContent.IsVisible = mainPageActive;
 	}
 
 	private void UpdateMainContentMargin()
@@ -74,19 +91,20 @@ public partial class MainWindow : Window
 	// Call this method to toggle visibility of the side menu
 	private void ToggleSideMenuVisibility(object? sender, RoutedEventArgs routedEventArgs)
 	{
-		AnimateMargin(); // Animate the margin change
+		_ = AnimateMargin(); // Animate the margin change
 	}
-	
+
 	private async Task AnimateMargin()
 	{
+		//TODO: This is currently tied to framerate, find a way to stop this
 		sideMenuVisible = !sideMenuVisible;
 		if (sideMenuVisible)
 		{
 			SideMenu.IsVisible = sideMenuVisible;
 		}
-		
-		const int duration = 150; // Duration of the animation in milliseconds
-		const int steps = 30; // Number of animation steps
+
+		const int duration = 60; // Duration of the animation in milliseconds
+		const int steps = 10; // Number of animation steps
 		double startMargin = sideMenuVisible ? 0 : 110; // Starting margin
 		double endMargin = sideMenuVisible ? 110 : 0; // Ending margin
 

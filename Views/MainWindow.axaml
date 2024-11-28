@@ -7,7 +7,7 @@
         ExtendClientAreaChromeHints="NoChrome"
         Width="700" Height="400"
         MinWidth="700" MinHeight="300">
-    
+
     <Window.Styles>
         <!-- main window styling -->
         <!-- burger menu styling -->
@@ -35,8 +35,8 @@
             </Style>
         </Style>
     </Window.Styles>
-    
-    
+
+
     <Grid>
         <!-- Side Menu -->
         <Border
@@ -75,7 +75,7 @@
                         Theme="{DynamicResource BorderlessButton}"
                         Click="SwitchEnginePage"/>
                 </StackPanel>
-        
+
                 <!-- Dock the Settings button at the bottom -->
                 <Button
                     Content="Settings"
@@ -87,19 +87,20 @@
                     Click="NavigateToSettings"/>
             </DockPanel>
         </Border>
-        
+
         <!-- Pages -->
         <ContentControl
             Name="SettingsContent"
+            IsVisible="True"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"/>
-        
+
         <ContentControl
             Name="MainContent"
-            IsVisible="False"
+            IsVisible="True"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"/>
-        
+
         <!-- Main content -->
         <DockPanel PointerPressed="OnPointerPressed">
             <!-- Header -->
@@ -108,7 +109,7 @@
                         VerticalAlignment="Top"
                         HorizontalAlignment="Stretch"
                         Background="{StaticResource SemiColorBackground0}">
-                
+
                 <!-- Burger Menu -->
                 <Button Name="BurgerMenuButton"
                         Content="☰"
@@ -127,19 +128,19 @@
                     Margin="10,0,0,0"
                     Foreground="{StaticResource SemiColorText2}"/>
             </StackPanel>
-            
+
             <StackPanel DockPanel.Dock="Top"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Right"
                         Orientation="Horizontal"
                         Margin="0,-40,6,0">
-                <Button Content="—" 
+                <Button Content="—"
                         Width="40"
                         Height="30"
                         Click="MinimizeWindow"
                         Background="Transparent"
                         Foreground="White"/>
-                <Button Content="X" 
+                <Button Content="X"
                         Width="40"
                         Height="30"
                         Click="CloseWindow"
@@ -148,5 +149,4 @@
             </StackPanel>
         </DockPanel>
     </Grid>
-    
 </Window>
