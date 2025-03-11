@@ -21,19 +21,21 @@ namespace GameBridge.Ui
 
         public ExplorerField(string title, string? path = null, PathType pathAttributePathType = PathType.FilePath)
         {
-            // File path input
+            HorizontalAlignment = HorizontalAlignment.Stretch;
+            VerticalAlignment = VerticalAlignment.Center;
+            
             filePathTextBox = new TextBox
             {
                 Watermark = "Path...",
                 Height = 25,
                 Text = path ?? string.Empty,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Center,
+                Width = double.NaN
             };
 
             filePathTextBox.TextChanged += (o, args) => TextChanged?.Invoke(o, args);
 
-            // Browse button
             var browseButton = new Button
             {
                 Content = "Browse",
@@ -52,52 +54,69 @@ namespace GameBridge.Ui
                 var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
                 if (storageProvider == null) return;
 
-                // Open file dialog
-                var fileResult = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                if (pathAttributePathType == PathType.FilePath)
                 {
-                    AllowMultiple = false,
-                    Title = "Select a File"
-                });
+                    // Open file dialog
+                    var fileResult = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                    {
+                        AllowMultiple = false,
+                        Title = "Select a File"
+                    });
 
-                if (fileResult.Count > 0)
+                    if (fileResult.Count > 0)
+                    {
+                        filePathTextBox.Text = fileResult[0].Path.LocalPath;
+                    }
+                }
+                else
                 {
-                    filePathTextBox.Text = fileResult[0].Path.LocalPath;
+                    var directoryResult = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                    {
+                        AllowMultiple = false,
+                        Title = "Select a Directory"
+                    });
+
+                    if (directoryResult.Count > 0)
+                    {
+                        filePathTextBox.Text = directoryResult[0].Path.LocalPath;
+                    }
                 }
             };
 
-            // Combine TextBox and Button in a horizontal layout using Grid
             var filePathInput = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Top,
-                ColumnDefinitions =
-                {
-                    new ColumnDefinition(new GridLength(80)),          // Title
-                    new ColumnDefinition(GridLength.Star),          // TextBox (expands to fill available space)
-                    new ColumnDefinition(new GridLength(60))           // Button
-                }
-            };
-
-            // Title TextBlock
-            var titleBlock = new TextBlock
-            {
-                Text = title,
-                Foreground = WindowColors.TextColor,
                 VerticalAlignment = VerticalAlignment.Center,
-                Width = 80
+                ColumnDefinitions = 
+                {
+                    new ColumnDefinition(GridLength.Auto),
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Auto)
+                },
+                Margin = new Thickness(0, 0, 0, 0)
             };
-            Grid.SetColumn(titleBlock, 0);
-            filePathInput.Children.Add(titleBlock);
 
-            // File path TextBox
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                var titleBlock = new TextBlock
+                {
+                    Text = title,
+                    Foreground = WindowColors.TextColor,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    MinWidth = 100
+                };
+                Grid.SetColumn(titleBlock, 0);
+                filePathInput.AddChild(titleBlock);
+            }
+
+            filePathTextBox.Margin = new Thickness(0, 0, 10, 0);
             Grid.SetColumn(filePathTextBox, 1);
-            filePathInput.Children.Add(filePathTextBox);
+            filePathInput.AddChild(filePathTextBox);
 
-            // Browse Button
             Grid.SetColumn(browseButton, 2);
-            filePathInput.Children.Add(browseButton);
+            filePathInput.AddChild(browseButton);
 
-            // Set the content to the Grid
             Content = filePathInput;
         }
     }

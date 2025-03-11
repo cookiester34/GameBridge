@@ -8,7 +8,7 @@ public static partial class UiFactory
 {
 	public static Control? ProcessClass<T>(T input, Type? givenType = null)
 	{
-		var control = new Section(80, 90);
+		var control = new Section();
 
 		if (input == null) return control;
 

@@ -1,9 +1,15 @@
-﻿namespace GameBridge.Data.EngineData;
+﻿using GameBridge.Ui;
+using GameBridge.Ui.Factory.UiFabrication.Attributes;
+
+namespace GameBridge.Data.EngineData;
 
 public class UnrealEngineProject : IEngineProject
 {
+	[InputField]
 	public string ProjectName { get; set; }
-	public string ProjectPath { get; set; }
+	[Path(PathType.DirectoryPath)]
+	public string ProjectDirectory { get; set; }
+	[InputField]
 	public string ProjectVersion { get; set; }
 
 	public void LoadProject()

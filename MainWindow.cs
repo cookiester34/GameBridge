@@ -1,10 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform;
 using GameBridge.Data;
+using GameBridge.Data.EngineData;
 using GameBridge.Pages;
 using GameBridge.Ui;
 using System;
@@ -55,8 +55,30 @@ public partial class MainWindow : ContentWindow
 	{
 		//TODO: Check if we have setup GameBridge, if so switch to main page
 
-		CenterContent();
+		if (DataManager.DoesSaveDataExist())
+		{
+			CreateMainUi();
+		}
+		else
+		{
+			CenterContent();
+			CreateWelcomeUi();
+		}
+	}
 
+	private void CreateMainUi()
+	{
+		var userData = DataManager.UserData;
+		var pageNavigator = new PageNavigator();
+		
+		pageNavigator.AddPage("Unity", new EnginePage<UnityEngineProject>(userData.UnitySettings));
+		pageNavigator.AddPage("Unreal", new EnginePage<UnrealEngineProject>(userData.UnrealSettings));
+		
+		AddContent(pageNavigator);
+	}
+
+	private void CreateWelcomeUi()
+	{
 		var welcomeContent = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
@@ -83,23 +105,34 @@ public partial class MainWindow : ContentWindow
 		};
 		welcomeContent.AddChild(startSetupButton);
 
-		var scrollView = new ScrollView(80, 90)
+		var scrollView = new ScrollView()
 		{
 			IsVisible = false
 		};
 		scrollView.AddContent(new SettingsPage());
+
+		var finishSetupbutton = new Button
+		{
+			Content = "Finish Setup"
+		};
+		finishSetupbutton.Click += (_, _) =>
+		{
+			RemoveContent(welcomeContent);
+			RemoveContent(scrollView);
+			CreateMainUi();
+		};
+		scrollView.AddContent(finishSetupbutton);
 		AddContent(scrollView);
 
 		welcomeButton.Click += (sender, e) =>
 		{
-			scrollView.IsVisible = true;
-			welcomeContent.IsVisible = false;
+			scrollView.Show();
+			welcomeContent.Hide();
 		};
 		startSetupButton.Click += (sender, e) =>
 		{
-			scrollView.IsVisible = true;
-			welcomeContent.IsVisible = false;
+			scrollView.Show();
+			welcomeContent.Hide();
 		};
 	}
-
 }

@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 using GameBridge.Data;
-using GameBridge.Ui.Attributes;
+using GameBridge.Ui.Factory.UiFabrication.Decorators;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
@@ -14,100 +14,58 @@ public static partial class UiFactory
 		var memberType = memberInfo.GetUnderlyingType();
 		var attributes = memberInfo.GetCustomAttributesWithInheritance();
 		var value = memberInfo.GetValue(target);
-		var hasAttributes = attributes.Length > 0;
-		var name = memberInfo.Name;
-
+		var name = FactoryHelpers.NiceString(memberInfo.Name);
+		var decorators = attributes.OfType<IDecorator>().ToArray();
+		
 		if (memberType.IsArray || (typeof(IEnumerable).IsAssignableFrom(memberType) && memberType != typeof(string)))
 		{
-			var collection = value as IEnumerable;
+			if (value is not IEnumerable collection) return null;
 
-			if (collection == null) return null;
-
-			var collectionUi = new UiCollection(memberType, attributes);
+			var collectionUi = new UiCollection(name, memberType, attributes);
 
 			collectionUi.InitializeUi(collection);
 
 			return collectionUi;
 		}
 
-		var uiElement = CreateUiFieldForType(memberType, attributes, name, value);
-		if (uiElement == null) return null;
+		var field = CreateAndBindUiField(memberType, attributes, name, value, memberInfo, target);
+		if (field == null) return null;
 
-		if (memberType == typeof(string))
+		if (field is ExplorerField)
 		{
-			if (hasAttributes)
-			{
-				if (attributes.Any(o => o.GetType() == typeof(PathAttribute)))
-				{
-					var explorerField = (ExplorerField)uiElement;
-					explorerField.TextChanged += (_, _) =>
-					{
-						var newValue = explorerField.Text;
-						if (newValue != null) memberInfo.SetValue(target, newValue);
-					};
-					return explorerField;
-				}
+			return field;
+		}
+		
+		var finishedField = FactoryHelpers.CreateNameField(name, field,
+			memberType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(memberType));
 
-				if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
-				{
-					var textBox = (TextBox)uiElement;
-					textBox.TextChanged += (_, _) =>
-					{
-						var newValue = textBox.Text;
-						if (newValue != null) memberInfo.SetValue(target, newValue);
-					};
-					return FactoryHelpers.CreateNameField(name, textBox);
-				}
+		if (decorators.Length > 0)
+		{
+			var topLevel = decorators.Where(decorator => decorator.IsTopDecorator);
+			var bottomLevel = decorators.Where(decorator => !decorator.IsTopDecorator);
+			
+			var container = new StackPanel();
+			
+			// top decorators
+			foreach (var decorator in topLevel)
+			{
+				container.AddChild(decorator.CreateDecorator(target));
 			}
-		}
-
-		if (memberType == typeof(int))
-		{
-			if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
+			
+			//Field
+			container.AddChild(finishedField);
+			
+			//bottom decorators
+			foreach (var decorator in bottomLevel)
 			{
-				var textBox = (TextBox)uiElement;
-				textBox.Watermark = "Int...";
-				textBox.TextChanged += FactoryHelpers.ValidateIntegerInputHandler;
-				textBox.TextChanged += (_, _) =>
-				{
-					var newValue = textBox.Text;
-					if (newValue != null) memberInfo.SetValue(target, int.Parse(newValue));
-				};
-				return FactoryHelpers.CreateNameField(name, textBox);
+				container.AddChild(decorator.CreateDecorator(target));
 			}
-		}
 
-		if (memberType == typeof(float))
+			return container;
+		}
+		else
 		{
-			if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
-			{
-				var textBox = (TextBox)uiElement;
-				textBox.Watermark = "Float...";
-				textBox.TextChanged += FactoryHelpers.ValidateFloatInputHandler;
-				textBox.TextChanged += (_, _) =>
-				{
-					var newValue = textBox.Text;
-					if (newValue != null) memberInfo.SetValue(target, float.Parse(newValue));
-				};
-				return FactoryHelpers.CreateNameField(name, textBox);
-			}
+			return finishedField;
 		}
-
-		if (memberType == typeof(bool))
-		{
-			var toggle = (ToggleSwitch)uiElement;
-			toggle.IsCheckedChanged += (_, _) =>
-			{
-				var newValue = (bool)toggle.IsChecked;
-				memberInfo.SetValue(target, newValue);
-			};
-		}
-
-		if (memberType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(memberType))
-		{
-			return ProcessClass(value, memberType);
-		}
-
-		return FactoryHelpers.CreateNameField(name, uiElement);
 	}
 }

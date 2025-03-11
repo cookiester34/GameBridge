@@ -23,24 +23,5 @@ public class SettingsPage : Page
 		AddContent(title);
 
 		AddContent(UiFactory.ProcessClass(userData));
-
-		// var userInfoSection = new Section("User Info",
-		// 	"Basic GameBridge settings");
-		// AddContent(userInfoSection);
-		//
-		// var unitySettingsSection = new Section("Unity Engine Settings",
-		// 	"Here are all the Unity Engine project settings");
-		// foreach (var installPath in userData.UnitySettings.EngineInstallPaths)
-		// {
-		// 	unitySettingsSection.AddContent(new ExplorerField("Unity Installs Directory:", installPath));
-		// }
-		//
-		// unitySettingsSection.AddContent(new ExplorerField("Unity Installs Directory:"));
-		// AddContent(unitySettingsSection);
-		//
-		// var unrealSettingsSection = new Section("Unreal Engine Settings",
-		// 	"Here are all the Unreal Engine project settings");
-		// unrealSettingsSection.AddContent(new ExplorerField("Unreal Installs Directory:"));
-		// AddContent(unrealSettingsSection);
 	}
 }

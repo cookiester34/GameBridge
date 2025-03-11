@@ -1,9 +1,13 @@
-﻿using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Layout;
-using GameBridge.Ui.Attributes;
+using GameBridge.Data;
+using GameBridge.Ui.Factory.UiFabrication;
+using GameBridge.Ui.Factory.UiFabrication.DataBinder;
+using GameBridge.Ui.Factory.UiFabrication.Decorators;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -11,30 +15,162 @@ namespace GameBridge.Ui.Factory;
 
 public class UiCollection : Panel
 {
+	private readonly Type templateType;
+	private readonly MemberInfo[] members;
+	private readonly bool isPrimitiveType;
+	private readonly object[] attributes;
+	private readonly IDataBinder[] dataBinders;
+	private readonly IDecorator[] decorators;
+	
 	private StackPanel StackPanel { get; set; }
+	private StackPanel topPanelPanel { get; set; }
+	private StackPanel elementPanel { get; set; }
+	private StackPanel bottomPanel { get; set; }
+
+	private List<IUiFabricator> fabricators = new();
 
 	private IList modifiableCollection;
-	private Type templateType;
-	private MemberInfo[] members;
-	private bool isPrimitiveType;
-	private object[] attributes;
-	private bool hasAttributes;
 
-	public UiCollection(Type collectionType, object[] attributes)
+	public UiCollection(string name, Type collectionType, object[] attributes)
 	{
+		Name = "Collection";
+		HorizontalAlignment = HorizontalAlignment.Stretch;
+		VerticalAlignment = VerticalAlignment.Stretch;
+		Width = Double.NaN;
+		
 		this.attributes = attributes;
-		hasAttributes = attributes is { Length: > 0 };
+		dataBinders = attributes.OfType<IDataBinder>().ToArray();
+		decorators = attributes.OfType<IDecorator>().ToArray();
 		templateType = collectionType.IsArray ? collectionType.GetElementType() : collectionType.GetGenericArguments()[0];
 		members = templateType.GetMembers(BindingFlags.Instance | BindingFlags.Public);
 		isPrimitiveType = collectionType.IsPrimitive;
 
-		StackPanel = new StackPanel()
+		var stackPanel = new StackPanel();
+		Children.Add(stackPanel);
+        
+		var gridContainer = new Grid
 		{
-			HorizontalAlignment = HorizontalAlignment.Left,
+			ColumnDefinitions =
+			{
+				new ColumnDefinition(new GridLength(60)),
+				new ColumnDefinition(GridLength.Star)
+			},
+			Margin = new Thickness(0, 0, 0, 0)
+		};
+		stackPanel.AddChild(gridContainer);
+		
+		var collapseButton = new Button
+		{
+			Content = "Show",
+			Height = 25,
 			VerticalAlignment = VerticalAlignment.Top
 		};
+		Grid.SetColumn(collapseButton, 0);
+		gridContainer.Children.Add(collapseButton);
 
-		Children.Add(StackPanel);
+		var collectionName = new TextBlock
+		{
+			Text = name,
+			Padding = new Thickness(4, 0, 0, 0),
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		Grid.SetColumn(collectionName, 1);
+		gridContainer.Children.Add(collectionName);
+
+		StackPanel = new StackPanel()
+		{
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Stretch,
+			Width = Double.NaN
+		};
+		
+		var border = new Border
+		{
+			Background = WindowColors.ThirdBackgroundColor,
+			BorderThickness = new Thickness(1),
+			CornerRadius = new CornerRadius(3),
+			Padding = new Thickness(2),
+			Margin = new Thickness(0, 6, 0, 2),
+			Child = StackPanel,
+			IsVisible = false
+		};
+		stackPanel.AddChild(border);
+		
+		collapseButton.Click += (_, _) =>
+		{
+			border.IsVisible = !border.IsVisible;
+			collapseButton.Content = border.IsVisible ? "Collapse" : "Show";
+		};
+		
+		topPanelPanel = new StackPanel()
+		{
+			Orientation = Orientation.Horizontal,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Top,
+			Width = Double.NaN
+		};
+		StackPanel.AddChild(topPanelPanel);
+		
+		elementPanel = new StackPanel()
+		{
+			Orientation = Orientation.Vertical,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Stretch,
+			Width = Double.NaN
+		};
+		StackPanel.AddChild(elementPanel);
+		
+		bottomPanel = new StackPanel()
+		{
+			Orientation = Orientation.Horizontal,
+			HorizontalAlignment = HorizontalAlignment.Right,
+			VerticalAlignment = VerticalAlignment.Top,
+			Width = Double.NaN
+		};
+		StackPanel.AddChild(bottomPanel);
+
+		var removeButton = new Button
+		{
+			Content = "-",
+			Width = 30,
+			Height = 24.5,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(0,2,6,0)
+		};
+		removeButton.Click += (_, _) =>
+		{
+			if (modifiableCollection != null)
+			{
+				RemoveAtIndex(modifiableCollection.Count - 1);
+			}
+		};
+		bottomPanel.AddChild(removeButton);
+
+		var addButton = new Button
+		{
+			Content = "+",
+			Width = 30,
+			Height = 24.5,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(0,2,2,0)
+		};
+		addButton.Click += (_, _) =>
+		{
+			if (modifiableCollection != null)
+			{
+				if (templateType == typeof(string))
+				{
+					AddAtIndex("", modifiableCollection.Count);
+				}
+				else
+				{
+					AddAtIndex(Activator.CreateInstance(templateType), modifiableCollection.Count);
+				}
+			}
+		};
+		bottomPanel.AddChild(addButton);
 	}
 
 	public void InitializeUi(IEnumerable collection)
@@ -52,22 +188,34 @@ public class UiCollection : Panel
 
 	public void RemoveAtIndex(int index)
 	{
-		if (index >= 0 && index < StackPanel.Children.Count)
+		if (index >= 0 && index < elementPanel.Children.Count)
 		{
-			StackPanel.Children.RemoveAt(index);
+			elementPanel.Children.RemoveAt(index);
 		}
 
 		if (index >= 0 && index < modifiableCollection.Count)
 		{
 			modifiableCollection.RemoveAt(index);
 		}
+
+		var fabricatorsCount = fabricators.Count;
+		if (fabricatorsCount <= 0) return;
+		for (int i = index + 1; i < fabricatorsCount; i++)
+		{
+			fabricators[i].UpdateBoundCollectionIndex(i - 1);
+		}
+
+		fabricators[index].DataWatcher.Dispose();
+		fabricators.RemoveAt(index);
+		
+		DataManager.SaveData();
 	}
 
 	public void RemoveContent(Control? control)
 	{
 		if (control == null) return;
 
-		var index = StackPanel.Children.IndexOf(control);
+		var index = elementPanel.Children.IndexOf(control);
 		if (index == -1) return;
 
 		RemoveAtIndex(index);
@@ -93,17 +241,30 @@ public class UiCollection : Panel
 		{
 			ColumnDefinitions =
 			{
-				new ColumnDefinition(GridLength.Star),  // Main Content (expands)
-				new ColumnDefinition(GridLength.Auto)   // Options like Remove button
-			}
+				new ColumnDefinition(GridLength.Star),
+				new ColumnDefinition(GridLength.Auto)
+			},
+			Margin = new Thickness(0, 0, 0, 0)
 		};
-		StackPanel.Children.Add(gridContainer);
+		
+		var border = new Border
+		{
+			Background = WindowColors.ThirdBackgroundColor,
+			BorderThickness = new Thickness(1),
+			CornerRadius = new CornerRadius(3),
+			Padding = new Thickness(2),
+			Margin = new Thickness(0, 0, 0, 2),
+			Child = gridContainer
+		};
+		elementPanel.Children.Add(border);
 
 		// Content Panel
 		var contentPanel = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
-			HorizontalAlignment = HorizontalAlignment.Center
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Center,
+			Width = Double.NaN
 		};
 		Grid.SetColumn(contentPanel, 0);
 		gridContainer.Children.Add(contentPanel);
@@ -113,8 +274,8 @@ public class UiCollection : Panel
 		{
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Right,
-			VerticalAlignment = VerticalAlignment.Top,
-			Width = 80
+			VerticalAlignment = VerticalAlignment.Center,
+			Width = 70
 		};
 		Grid.SetColumn(optionsPanel, 1);
 		gridContainer.Children.Add(optionsPanel);
@@ -123,113 +284,58 @@ public class UiCollection : Panel
 		var removeButton = new Button
 		{
 			Content = "Remove",
-			Width = 60,
+			Width = 65,
 			Height = 24.5,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
+			HorizontalAlignment = HorizontalAlignment.Right,
+			VerticalAlignment = VerticalAlignment.Center
 		};
 		removeButton.Click += (_, _) =>
 		{
-			RemoveContent(gridContainer);
+			RemoveContent(border);
 		};
 		optionsPanel.Children.Add(removeButton);
 
 		if (isPrimitiveType || templateType == typeof(string))
 		{
-			var name = $"Index: {index}";
-			var uiElementMember = UiFactory.CreateUiFieldForType(templateType, attributes, name, value);
-			if (uiElementMember == null) return;
-
-			if (templateType == typeof(string))
+			var fabricator = FactoryHelpers.GetFabricatorForType(templateType);
+			if (fabricator != null)
 			{
-				if (hasAttributes)
+				fabricator.CreateField("", value, attributes);
+				fabricator.BindCollectionElement(modifiableCollection, index, dataBinders);
+				
+				if (decorators.Length > 0)
 				{
-					if (attributes.Any(o => o.GetType() == typeof(PathAttribute)))
-					{
-						var explorerField = (ExplorerField)uiElementMember;
-						explorerField.TextChanged += (_, _) =>
-						{
-							var newValue = explorerField.Text;
-							modifiableCollection[index] = newValue;
-						};
-						contentPanel.AddChild(explorerField);
-						return;
-					}
+					var topLevel = decorators.Where(decorator => decorator.IsTopDecorator);
+					var bottomLevel = decorators.Where(decorator => !decorator.IsTopDecorator);
+			
+					var container = new StackPanel();
 
-					if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
+					var target = fabricator.ModifiableCollection[fabricator.BoundCollectionIndex];
+			
+					// top decorators
+					foreach (var decorator in topLevel)
 					{
-						var textBox = (TextBox)uiElementMember;
-						textBox.TextChanged += (_, _) =>
-						{
-							var newValue = textBox.Text;
-							modifiableCollection[index] = newValue;
-						};
-						contentPanel.AddChild(FactoryHelpers.CreateNameField(name, textBox));
-						return;
+						container.AddChild(decorator.CreateDecorator(target));
 					}
+			
+					//Field
+					container.AddChild(fabricator.Field);
+			
+					//bottom decorators
+					foreach (var decorator in bottomLevel)
+					{
+						container.AddChild(decorator.CreateDecorator(target));
+					}
+					
+					contentPanel.AddChild(container);
 				}
 				else
 				{
-					contentPanel.AddChild(FactoryHelpers.CreateNameField(name, uiElementMember));
-					return;
+					contentPanel.AddChild(fabricator.Field);
 				}
+				
+				fabricators.Add(fabricator);
 			}
-
-			if (templateType == typeof(int))
-			{
-				if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
-				{
-					var textBox = (TextBox)uiElementMember;
-					textBox.Watermark = "Int...";
-					textBox.TextChanged += FactoryHelpers.ValidateIntegerInputHandler;
-					textBox.TextChanged += (_, _) =>
-					{
-						var newValue = int.Parse(textBox.Text);
-						modifiableCollection[index] = newValue;
-					};
-					contentPanel.AddChild(FactoryHelpers.CreateNameField(name, textBox));
-					return;
-				}
-			}
-
-			if (templateType == typeof(float))
-			{
-				if (attributes.Any(o => o.GetType() == typeof(InputFieldAttribute)))
-				{
-					var textBox = (TextBox)uiElementMember;
-					textBox.Watermark = "Float...";
-					textBox.TextChanged += FactoryHelpers.ValidateFloatInputHandler;
-					textBox.TextChanged += (_, _) =>
-					{
-						var newValue = float.Parse(textBox.Text);
-						modifiableCollection[index] = newValue;
-					};
-					contentPanel.AddChild(FactoryHelpers.CreateNameField(name, textBox));
-					return;
-				}
-			}
-
-			if (templateType == typeof(bool))
-			{
-				var toggle = (ToggleSwitch)uiElementMember;
-				toggle.IsCheckedChanged += (_, _) =>
-				{
-					var newValue = (bool)toggle.IsChecked;
-					modifiableCollection[index] = newValue;
-					;
-				};
-				contentPanel.AddChild(FactoryHelpers.CreateNameField(name, toggle));
-				return;
-			}
-
-			if (templateType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(templateType))
-			{
-				contentPanel.AddChild(UiFactory.ProcessClass(value, templateType));
-				return;
-			}
-
-			contentPanel.AddChild(FactoryHelpers.CreateNameField(name, uiElementMember));
-			return;
 		}
 		else
 		{
@@ -237,9 +343,11 @@ public class UiCollection : Panel
 			{
 				if (elementMember.MemberType != MemberTypes.Property &&
 				    elementMember.MemberType != MemberTypes.Field) continue;
-
+				
 				contentPanel.AddChild(elementMember.CreateAndBindUi(value));
 			}
 		}
+		
+		DataManager.SaveData();
 	}
 }

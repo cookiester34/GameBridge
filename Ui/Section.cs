@@ -1,14 +1,14 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GameBridge.Data;
-using GameBridge.Ui.Extensions;
 
 namespace GameBridge.Ui;
 
-public class Section : ResizablePanel
+//TODO: Merge Section and ResizableSection
+public class Section : Panel
 {
 	public static readonly StyledProperty<string> TitleProperty =
         AvaloniaProperty.Register<Section, string>(nameof(Title));
@@ -32,23 +32,25 @@ public class Section : ResizablePanel
         set => SetValue(DescriptionProperty, value);
     }
 
-    public Section(int percentageHeight, int percentageWidth, string? title = null, string? description = null) : base(percentageHeight, percentageWidth)
+    public Section(string title = null, string? description = null)
     {
         var border = new Border
         {
             Background = WindowColors.SecondaryBackgroundColor,
-            // BorderBrush = ,
             BorderThickness = new Thickness(2),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(10),
-            HorizontalAlignment = HorizontalAlignment.Stretch
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top,
+            Width = double.NaN
         };
 
         var stackPanel = new StackPanel
         {
             Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Spacing = 8
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Spacing = 8,
+            Width = double.NaN
         };
 
         //TODO: instead of not adding it, just hide it depending on value
@@ -84,8 +86,9 @@ public class Section : ResizablePanel
         ContentContainer = new StackPanel
         {
             Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Spacing = 8
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Spacing = 8,
+            Width = double.NaN
         };
 
         stackPanel.Children.Add(ContentContainer);

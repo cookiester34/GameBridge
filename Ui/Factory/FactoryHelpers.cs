@@ -1,6 +1,9 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Layout;
+using GameBridge.Ui.Factory.UiFabrication;
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace GameBridge.Ui.Factory;
@@ -70,22 +73,109 @@ public static partial class FactoryHelpers
 		}
 	}
 
-	public static Control? CreateNameField(string name, Control? content)
+	public static Control? CreateNameField(string name, Control? content, bool vertical = false)
 	{
-		var stackPanel = new StackPanel
+		var grid = vertical ?
+			new Grid
+			{
+				RowDefinitions =
+				[
+					new RowDefinition(GridLength.Auto),
+					new RowDefinition(GridLength.Star)
+				],
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+				VerticalAlignment = VerticalAlignment.Stretch,
+				Margin = new Thickness(0, 2, 0, 2)
+			}
+			: new Grid
+			{
+				ColumnDefinitions =
+				[
+					new ColumnDefinition(GridLength.Auto),
+					new ColumnDefinition(GridLength.Star)
+				],
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+				Margin = new Thickness(0, 2, 0, 2)
+			};
+
+		if (!string.IsNullOrWhiteSpace(name))
 		{
-			Orientation = Orientation.Horizontal,
-			Spacing = 10
-		};
+			var nameBox = new TextBlock
+			{
+				Text = name,
+				VerticalAlignment = VerticalAlignment.Center,
+				Margin = new Thickness(0, 0, 6, 0),
+				MinWidth = 100
+			};
+			if (vertical)
+			{
+				Grid.SetRow(nameBox, 0);
+			}
+			else
+			{
+				Grid.SetColumn(nameBox, 0);
+			}
 
-		var nameBox = new TextBlock
+			grid.Children.Add(nameBox);
+		}
+
+		if (content != null)
 		{
-			Text = name
-		};
-		stackPanel.AddChild(nameBox);
+			// Make content stretch in its column
+			content.HorizontalAlignment = HorizontalAlignment.Stretch;
+			content.VerticalAlignment = VerticalAlignment.Center;
+			
+			if (vertical)
+			{
+				Grid.SetRow(content, 1);
+			}
+			else
+			{
+				Grid.SetColumn(content, 1);
+			}
+			grid.Children.Add(content);
+		}
 
-		stackPanel.AddChild(content);
+		return grid;
+	}
 
-		return stackPanel;
+	public static IUiFabricator? GetFabricatorForType(Type type)
+	{
+		if (type == typeof(string)) return new StringFabricator();
+		if (type == typeof(int)) return new IntFabricator();
+		if (type == typeof(float)) return new FloatFabricator();
+		if (type == typeof(bool)) return new BoolFabricator();
+		return null;
+	}
+
+	public static string NiceString(string input)
+	{
+		if (string.IsNullOrEmpty(input))
+			return input;
+
+		StringBuilder result = new StringBuilder();
+		result.Append(input[0]);
+
+		for (int i = 1; i < input.Length; i++)
+		{
+			char current = input[i];
+			char previous = input[i - 1];
+
+			if (char.IsUpper(current))
+			{
+				bool previousIsSpace = previous == ' ';
+				bool previousIsLower = char.IsLower(previous);
+				bool nextIsLower = i + 1 < input.Length && char.IsLower(input[i + 1]);
+
+				if (!previousIsSpace && (previousIsLower || nextIsLower))
+				{
+					result.Append(' ');
+				}
+			}
+
+			result.Append(current);
+		}
+
+		return result.ToString();
 	}
 }

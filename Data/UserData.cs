@@ -1,12 +1,13 @@
 ﻿using GameBridge.Data.EngineData;
-using GameBridge.Ui.Attributes;
+using GameBridge.Ui;
+using GameBridge.Ui.Factory.UiFabrication.Attributes;
 
 namespace GameBridge.Data;
 
 public class UserData
 {
-	[InputField]
-	public string Username { get; set; }
+	[Path(PathType.DirectoryPath)]
+	public string GameBridgeSaveDirectory { get; set; }
 	public UnityEngineSettings UnitySettings { get; set; } = new UnityEngineSettings();
 	public UnrealEngineSettings UnrealSettings { get; set; } = new UnrealEngineSettings();
 }

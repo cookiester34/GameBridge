@@ -11,9 +11,8 @@ public class Page : UserControl
 	{
 		StackPanel = new StackPanel
 		{
+			Name = "Page",
 			Orientation = orientation,
-			HorizontalAlignment = HorizontalAlignment.Left,
-			VerticalAlignment = VerticalAlignment.Top,
 			Spacing = 10
 		};
 

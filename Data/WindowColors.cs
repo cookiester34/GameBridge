@@ -7,6 +7,7 @@ public static class WindowColors
 	public static IBrush TitleBarColor { get; set; } = new SolidColorBrush(Color.FromRgb(23, 23, 26));
 	public static IBrush BackgroundColor { get; set; } = new SolidColorBrush(Color.FromRgb(23, 23, 26));
 	public static IBrush SecondaryBackgroundColor { get; set; } = new SolidColorBrush(Color.FromRgb(35, 35, 41));
+	public static IBrush ThirdBackgroundColor { get; set; } = new SolidColorBrush(Color.FromArgb(27, 100, 100, 100));
 	public static IBrush TextColor { get; set; } = new SolidColorBrush(Color.FromRgb(228, 231, 236));
 	public static IBrush BackgroundTextColor { get; set; } = new SolidColorBrush(Color.FromRgb(164, 166, 170));
 	public static IBrush UiColor { get; set; } = new SolidColorBrush(Color.FromRgb(49, 105, 221));

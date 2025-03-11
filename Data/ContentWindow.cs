@@ -33,6 +33,11 @@ public abstract class ContentWindow : Window
 		StackPanel.Children.Add(control);
 	}
 
+	public void RemoveContent(Control control)
+	{
+		StackPanel.Children.Remove(control);
+	}
+
 	public void CenterContent()
 	{
 		StackPanel.HorizontalAlignment = HorizontalAlignment.Center;

@@ -59,7 +59,11 @@ public partial class MainWindow
 			WindowState = WindowState == WindowState.Maximized
 				? WindowState.Normal
 				: WindowState.Maximized;
-		closeButton.Click += (_, _) => Close();
+		closeButton.Click += (_, _) =>
+		{
+			DataManager.SaveData();
+			Close();
+		};
 	}
 
 	private Button CreateTitleBarButton(string content)

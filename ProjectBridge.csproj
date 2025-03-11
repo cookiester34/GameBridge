@@ -9,9 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="CustomUi\" />
+        <Folder Include="Assets\" />
         <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
+        <Folder Include="Ui\Extensions\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,5 +26,11 @@
         <PackageReference Include="HeroIcons.Avalonia" Version="1.0.2" />
         <PackageReference Include="Semi.Avalonia" Version="11.1.0.3" />
         <PackageReference Include="Semi.Avalonia.ColorPicker" Version="11.1.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Views\EngineDataPage.axaml" />
+      <UpToDateCheckInput Remove="Views\MainWindow.axaml" />
+      <UpToDateCheckInput Remove="Views\SettingsPage.axaml" />
     </ItemGroup>
 </Project>
