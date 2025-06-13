@@ -46,7 +46,7 @@ namespace GameBridge.Ui
                 CornerRadius = new CornerRadius(3),
                 Padding = new Thickness(5),
                 Margin = new Thickness(5,0,0,0),
-                Width = 60
+                Width = 80
             };
 
             browseButton.Click += async (sender, e) =>
@@ -104,7 +104,7 @@ namespace GameBridge.Ui
                     Foreground = WindowColors.TextColor,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 0, 6, 0),
-                    MinWidth = 100
+                    MinWidth = 120
                 };
                 Grid.SetColumn(titleBlock, 0);
                 filePathInput.AddChild(titleBlock);

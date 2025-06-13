@@ -97,6 +97,7 @@ public static partial class FactoryHelpers
 				HorizontalAlignment = HorizontalAlignment.Stretch,
 				Margin = new Thickness(0, 2, 0, 2)
 			};
+		grid.MaxWidth = double.PositiveInfinity;
 
 		if (!string.IsNullOrWhiteSpace(name))
 		{
@@ -105,7 +106,7 @@ public static partial class FactoryHelpers
 				Text = name,
 				VerticalAlignment = VerticalAlignment.Center,
 				Margin = new Thickness(0, 0, 6, 0),
-				MinWidth = 100
+				MinWidth = 120
 			};
 			if (vertical)
 			{

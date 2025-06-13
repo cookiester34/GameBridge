@@ -1,63 +1,86 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
 using GameBridge.Data.EngineData;
 using GameBridge.Ui;
 using GameBridge.Ui.Factory;
-using Avalonia.Controls;
-using Avalonia.Layout;
+using System;
 
 namespace GameBridge.Pages;
 
 public class EnginePage<T> : Page where T : IEngineProject
 {
+	private int gridWidth = 2;
+
 	public EnginePage(IEngineSettings<T> engineSettings)
 	{
-		var scrollView = new ScrollView();
-		AddContent(scrollView);
+		var scrollView = new ScrollViewer
+		{
+			VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+			HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Stretch
+		};
 
-		// Create grid with 2 columns
 		var grid = new Grid
 		{
-			ColumnDefinitions = 
-			{
-				new ColumnDefinition(GridLength.Star),
-				new ColumnDefinition(GridLength.Star)
-			},
 			Margin = new Thickness(10),
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Top
 		};
 
-		scrollView.AddContent(grid);
+		// Define columns
+		for (int i = 0; i < gridWidth; i++)
+		{
+			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+		}
 
 		var projects = engineSettings.GetProjects();
-        
+
+		// Optional: auto-calculate grid height
+		int rows = (int)Math.Ceiling((double)projects.Count / gridWidth);
+
+		for (int i = 0; i < rows; i++)
+		{
+			grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+		}
+
+		// Add project sections to grid
 		for (int i = 0; i < projects.Count; i++)
 		{
 			var project = projects[i];
-			var section = new Section(project.ProjectName);
-			if (project is UnityEngineProject unityEngineProject)
+			var section = new Section(project.ProjectName)
 			{
-				section.AddContent(UiFactory.ProcessClass(unityEngineProject));
-			}
-			else if (project is UnrealEngineProject unrealEngineProject)
-			{
-				section.AddContent(UiFactory.ProcessClass(unrealEngineProject));
-			}
+				HorizontalAlignment = HorizontalAlignment.Stretch
+			};
 
-			// Calculate grid position
-			int row = i / 2;
-			int column = i % 2;
-
-			// Add rows as needed
-			while (grid.RowDefinitions.Count <= row)
+			switch (project)
 			{
-				grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+				case UnityEngineProject unityEngineProject:
+					section.AddContent(UiFactory.ProcessClass(unityEngineProject) ?? new TextBlock{Text = "Failed to draw project Gui"});
+					break;
+				case UnrealEngineProject unrealEngineProject:
+					section.AddContent(UiFactory.ProcessClass(unrealEngineProject) ?? new TextBlock{Text = "Failed to draw project Gui"});
+					break;
 			}
 
-			// Add to grid
-			Grid.SetRow(section, row);
-			Grid.SetColumn(section, column);
-			grid.AddChild(section);
+			int row = i / gridWidth;
+			int column = i % gridWidth;
+
+			// ✅ Wrap section in a Border to add spacing
+			var sectionWrapper = new Border
+			{
+				Margin = new Thickness(3), // adjust as needed
+				Child = section
+			};
+
+			Grid.SetRow(sectionWrapper, row);
+			Grid.SetColumn(sectionWrapper, column);
+			grid.Children.Add(sectionWrapper);
 		}
+
+		scrollView.Content = grid;
+		AddContent(scrollView);
 	}
 }

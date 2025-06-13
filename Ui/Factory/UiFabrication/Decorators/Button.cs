@@ -1,13 +1,16 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using System;
 using System.Reflection;
 
 namespace GameBridge.Ui.Factory.UiFabrication.Decorators;
 
-public class ButtonAttribute : Attribute,  IDecorator
+public class ButtonAttribute : Attribute, IDecorator
 {
 	public string MethodName { get; }
-	
+
 	public ButtonAttribute(string methodName)
 	{
 		MethodName = methodName;
@@ -17,10 +20,9 @@ public class ButtonAttribute : Attribute,  IDecorator
 
 	public Control CreateDecorator(object? targetInstance)
 	{
-		// Get type from the instance containing the attributed member
-		var targetType = targetInstance?.GetType() 
-		               ?? throw new ArgumentNullException(nameof(targetInstance), 
-			               "Target instance required for type inference");
+		var targetType = targetInstance?.GetType()
+		                 ?? throw new ArgumentNullException(nameof(targetInstance),
+			                 "Target instance required for type inference");
 
 		var method = targetType.GetMethod(MethodName,
 			BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
@@ -31,17 +33,24 @@ public class ButtonAttribute : Attribute,  IDecorator
 		var button = new Button
 		{
 			Content = FactoryHelpers.NiceString(MethodName),
+			Margin = new Thickness(0, 4, 0, 4),
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			Width = double.NaN
 		};
 
 		button.Click += (_, _) =>
 		{
-			// For static methods, pass null as target instance
 			method?.Invoke(method.IsStatic ? null : targetInstance, Array.Empty<object?>());
 		};
 
-		return button;
+		return new Border
+		{
+			Margin = new Thickness(0, 4),
+			CornerRadius = new CornerRadius(4),
+			Child = button
+		};
 	}
-	
+
 	private void ValidateMethod(MethodInfo? method, Type targetType)
 	{
 		if (method == null)

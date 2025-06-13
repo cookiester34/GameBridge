@@ -22,9 +22,7 @@ public partial class MainWindow : ContentWindow
 
 		CreateWindowContent();
 
-		Initialize();
-
-		this.LayoutUpdated += MainWindowLayoutUpdated;
+		LayoutUpdated += MainWindowLayoutUpdated;
 
 		// Debug
 		this.AttachDevTools();
@@ -47,8 +45,11 @@ public partial class MainWindow : ContentWindow
 		CanResize = true;
 
 		//TODO: Can save and load this
-		Width = 700;
+		Width = 1000;
 		Height = 500;
+		
+		MinWidth = 800;
+		MinHeight = 400;
 	}
 
 	private void CreateWindowContent()
@@ -61,7 +62,6 @@ public partial class MainWindow : ContentWindow
 		}
 		else
 		{
-			CenterContent();
 			CreateWelcomeUi();
 		}
 	}
@@ -74,7 +74,7 @@ public partial class MainWindow : ContentWindow
 		pageNavigator.AddPage("Unity", new EnginePage<UnityEngineProject>(userData.UnitySettings));
 		pageNavigator.AddPage("Unreal", new EnginePage<UnrealEngineProject>(userData.UnrealSettings));
 		
-		AddContent(pageNavigator);
+		AddContentToWindow(pageNavigator);
 	}
 
 	private void CreateWelcomeUi()
@@ -85,7 +85,8 @@ public partial class MainWindow : ContentWindow
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 		};
-		AddContent(welcomeContent);
+
+		var welcomeContainer = CenterContentInWindow(welcomeContent);
 
 		var welcomeButton = new Button
 		{
@@ -105,34 +106,37 @@ public partial class MainWindow : ContentWindow
 		};
 		welcomeContent.AddChild(startSetupButton);
 
-		var scrollView = new ScrollView()
-		{
-			IsVisible = false
-		};
-		scrollView.AddContent(new SettingsPage());
-
-		var finishSetupbutton = new Button
-		{
-			Content = "Finish Setup"
-		};
-		finishSetupbutton.Click += (_, _) =>
-		{
-			RemoveContent(welcomeContent);
-			RemoveContent(scrollView);
-			CreateMainUi();
-		};
-		scrollView.AddContent(finishSetupbutton);
-		AddContent(scrollView);
-
 		welcomeButton.Click += (sender, e) =>
 		{
-			scrollView.Show();
-			welcomeContent.Hide();
+			SwitchToSettingsPage();
 		};
 		startSetupButton.Click += (sender, e) =>
 		{
-			scrollView.Show();
-			welcomeContent.Hide();
+			SwitchToSettingsPage();
 		};
+
+		void SwitchToSettingsPage()
+		{
+			RemoveContentToWindow(welcomeContainer);
+
+			var settingsScrollView = new ScrollView();
+			settingsScrollView.AddContent(new SettingsPage());
+
+			var finishSetupbutton = new Button
+			{
+				Content = "Finish Setup",
+				Margin = new Thickness(0, 0, 0, 10)
+			};
+
+			settingsScrollView.AddContent(finishSetupbutton);
+
+			var settingScrollViewContainer = CenterContentInWindow(settingsScrollView, 0.1);
+
+			finishSetupbutton.Click += (_, _) =>
+			{
+				RemoveContentToWindow(settingScrollViewContainer);
+				CreateMainUi();
+			};
+		}
 	}
 }

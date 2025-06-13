@@ -45,10 +45,10 @@ public partial class MainWindow
 		};
 		titleBar.Children.Add(buttonPanel);
 
-		var minimizeButton = CreateTitleBarButton("—");
+		var minimizeButton = CreateTitleBarButton("\uE921");
 		minimizeButton.CornerRadius = new CornerRadius(0, 0, 0, 3);
-		var maximizeButton = CreateTitleBarButton("☐");
-		var closeButton = CreateTitleBarButton("X");
+		var maximizeButton = CreateTitleBarButton("\uE922");
+		var closeButton = CreateTitleBarButton("\uE8BB");
 
 		buttonPanel.Children.Add(minimizeButton);
 		buttonPanel.Children.Add(maximizeButton);
@@ -72,17 +72,28 @@ public partial class MainWindow
 		{
 			Content = new TextBlock
 			{
-				Text = content,
-				VerticalAlignment = VerticalAlignment.Center,
+				FontFamily = new FontFamily("Segoe Fluent Icons"),
+				Text = content, // Unicode for "Close"
+				FontSize = 10,
 				HorizontalAlignment = HorizontalAlignment.Center,
-				FontSize = 16
+				VerticalAlignment = VerticalAlignment.Center,
+				Padding = new Thickness(0),
+				Width = 15,
 			},
+			// Content = new TextBlock
+			// {
+			// 	Text = content,
+			// 	VerticalAlignment = VerticalAlignment.Center,
+			// 	HorizontalAlignment = HorizontalAlignment.Center,
+			// 	FontSize = 16
+			// },
 			Width = 30,
 			Height = 30,
 			CornerRadius = new CornerRadius(0),
 			BorderThickness = new Thickness(0),
 			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center
+			VerticalAlignment = VerticalAlignment.Center,
+			Background = WindowColors.UiColor
 		};
 
 		button.PointerEntered += (s, e) =>

@@ -1,19 +1,18 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Dev\\C#\\test\\GameBridge\\GameBridge.csproj": {}
+    "F:\\Dev\\GameBridge\\GameBridge.csproj": {}
   },
   "projects": {
-    "C:\\Dev\\C#\\test\\GameBridge\\GameBridge.csproj": {
+    "F:\\Dev\\GameBridge\\GameBridge.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Dev\\C#\\test\\GameBridge\\GameBridge.csproj",
+        "projectUniqueName": "F:\\Dev\\GameBridge\\GameBridge.csproj",
         "projectName": "GameBridge",
-        "projectPath": "C:\\Dev\\C#\\test\\GameBridge\\GameBridge.csproj",
+        "projectPath": "F:\\Dev\\GameBridge\\GameBridge.csproj",
         "packagesPath": "C:\\Users\\cooki\\.nuget\\packages\\",
-        "outputPath": "C:\\Dev\\C#\\test\\GameBridge\\obj\\",
+        "outputPath": "F:\\Dev\\GameBridge\\obj\\",
         "projectStyle": "PackageReference",
-        "UsingMicrosoftNETSdk": false,
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
@@ -27,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,7 +43,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -70,6 +69,10 @@
             "Avalonia.Themes.Fluent": {
               "target": "Package",
               "version": "[11.2.1, )"
+            },
+            "Semi.Avalonia": {
+              "target": "Package",
+              "version": "[11.2.1.8, )"
             }
           },
           "imports": [

@@ -15,7 +15,8 @@ public static class DataManager
 	}
 
 	//TODO: make this check that even if the file exists that there is data there
-	public static bool DoesSaveDataExist() => File.Exists(DataFileName);
+	// public static bool DoesSaveDataExist() => File.Exists(DataFileName);
+	public static bool DoesSaveDataExist() => false;
 
 	public static void SaveData()
 	{
@@ -25,6 +26,7 @@ public static class DataManager
 
 	public static UserData LoadData()
 	{
+		// return CreateNewUserData();
 		if (!File.Exists(DataFileName))
 		{
 			return CreateNewUserData();

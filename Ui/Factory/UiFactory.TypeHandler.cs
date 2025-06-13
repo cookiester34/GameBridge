@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Layout;
 using GameBridge.Data;
 using GameBridge.Ui.Factory.UiFabrication.Decorators;
 using System.Collections;
@@ -31,20 +32,28 @@ public static partial class UiFactory
 		var field = CreateAndBindUiField(memberType, attributes, name, value, memberInfo, target);
 		if (field == null) return null;
 
-		if (field is ExplorerField)
+		Control? finishedField;
+		if (field is not ExplorerField)
 		{
-			return field;
+			finishedField = FactoryHelpers.CreateNameField(name, field,
+				memberType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(memberType));
 		}
-		
-		var finishedField = FactoryHelpers.CreateNameField(name, field,
-			memberType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(memberType));
+		else
+		{
+			finishedField = field;
+		}
 
 		if (decorators.Length > 0)
 		{
 			var topLevel = decorators.Where(decorator => decorator.IsTopDecorator);
 			var bottomLevel = decorators.Where(decorator => !decorator.IsTopDecorator);
 			
-			var container = new StackPanel();
+			var container = new StackPanel
+			{
+				Orientation = Orientation.Vertical,
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+				Spacing = 6
+			};
 			
 			// top decorators
 			foreach (var decorator in topLevel)

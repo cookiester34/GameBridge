@@ -5,22 +5,22 @@ namespace GameBridge.Ui;
 
 public class Page : UserControl
 {
-	public StackPanel StackPanel { get; private set; }
+	public Grid RootGrid { get; private set; }
 
-	public Page(Orientation orientation = Orientation.Vertical)
+	public Page()
 	{
-		StackPanel = new StackPanel
+		RootGrid = new Grid
 		{
-			Name = "Page",
-			Orientation = orientation,
-			Spacing = 10
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Stretch,
 		};
 
-		Content = StackPanel;
+		Content = RootGrid;
 	}
 
 	public void AddContent(Control? control)
 	{
-		StackPanel.Children.Add(control);
+		if (control != null)
+			RootGrid.Children.Add(control);
 	}
 }
