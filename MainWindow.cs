@@ -74,6 +74,9 @@ public partial class MainWindow : ContentWindow
 		pageNavigator.AddPage("Unity", new EnginePage<UnityEngineProject>(userData.UnitySettings));
 		pageNavigator.AddPage("Unreal", new EnginePage<UnrealEngineProject>(userData.UnrealSettings));
 		
+		//TODO: Save the last one and use that
+		pageNavigator.SwitchPage("Unity");
+		
 		AddContentToWindow(pageNavigator);
 	}
 
