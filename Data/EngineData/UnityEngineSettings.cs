@@ -13,18 +13,19 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 	
 	[Path(PathType.DirectoryPath)]
 	//TODO: Get value changed working with collections [OnValueChanged(nameof(GetEngineInstallPaths))]
-	public List<string> EngineInstallDirectories { get; set; } = new List<string>();
-	public List<EngineInstall> EngineInstallPaths { get; set; } = new List<EngineInstall>();
+	public List<string> InstallScanPaths { get; set; } = new List<string>();
+	public List<EngineInstall> IndividualEngineInstallPaths { get; set; } = new List<EngineInstall>();
 	[Path(PathType.DirectoryPath)]
 	//TODO: Get value changed working with collections [OnValueChanged(nameof(GetProjects))]
-	public List<string> ProjectDirectories { get; set; } = new List<string>();
-	public List<UnityEngineProject> Projects { get; set; } = new List<UnityEngineProject>();
+	public List<string> ProjectScanPaths { get; set; } = new List<string>();
+	public List<UnityEngineProject> IndividualProjectPaths { get; set; } = new List<UnityEngineProject>();
+	public bool IsEnabled { get; set; } = false;
 	
 	public List<IEngineProject> GetProjects()
 	{
-		Projects.Clear();
+		IndividualProjectPaths.Clear();
 		
-		foreach (var projectDirectory in ProjectDirectories)
+		foreach (var projectDirectory in ProjectScanPaths)
 		{
 			if (!Directory.Exists(projectDirectory))
 			{
@@ -40,7 +41,7 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 				{
 					var projectName = directory.Split(Path.DirectorySeparatorChar)[^1];
 					
-					var projectExists = Projects.Any(project => project.ProjectName == projectName);
+					var projectExists = IndividualProjectPaths.Any(project => project.ProjectName == projectName);
 					if (projectExists) continue;
 
 					var lines = File.ReadAllLines(projectVerionTxt);
@@ -50,7 +51,7 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 						version = lines[0].Split(":")[^1].Trim();
 					}
 					
-					Projects.Add(new UnityEngineProject
+					IndividualProjectPaths.Add(new UnityEngineProject
 					{
 						ProjectName = projectName,
 						ProjectDirectory = directory,
@@ -60,14 +61,14 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 			}
 		}
 
-		return [..Projects]; //fancy
+		return [..IndividualProjectPaths]; //fancy
 	}
 
 	public List<EngineInstall> GetEngineInstallPaths()
 	{
-		EngineInstallPaths.Clear();
+		IndividualEngineInstallPaths.Clear();
 
-		foreach (var rootDir in EngineInstallDirectories)
+		foreach (var rootDir in InstallScanPaths)
 		{
 			if (!Directory.Exists(rootDir))
 				continue;
@@ -88,10 +89,10 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 					InstallPath = unityExePath
 				};
 
-				EngineInstallPaths.Add(install);
+				IndividualEngineInstallPaths.Add(install);
 			}
 		}
 
-		return [..EngineInstallPaths]; //fancy
+		return [..IndividualEngineInstallPaths]; //fancy
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GameBridge.Data;
@@ -25,19 +26,29 @@ public class SettingsPage : Page
 			Text = "GameBridge Settings",
 			FontWeight = FontWeight.Bold,
 			FontSize = 18,
-			Margin = new Thickness(5, 0, 0, 0)
+			Margin = new Thickness(0, 0, 0, 0)
 		});
 
 		var settingsUi = UiFactory.ProcessClass(userData);
 		if (settingsUi != null)
-			innerPanel.Children.Add(settingsUi);
-
-		var paddedContainer = new Border
 		{
-			Padding = new Thickness(20), // ← Adds top/bottom/left/right padding
+			innerPanel.Children.Add(settingsUi);
+		}
+
+		var paddedContent = new Border
+		{
+			Padding = new Thickness(11, 0, 11, 2),
 			Child = innerPanel
 		};
 
-		AddContent(paddedContainer);
+		var scrollViewer = new ScrollViewer
+		{
+			Content = paddedContent,
+			VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+			HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+		};
+
+		AddContent(scrollViewer);
 	}
 }

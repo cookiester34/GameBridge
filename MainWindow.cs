@@ -73,6 +73,7 @@ public partial class MainWindow : ContentWindow
 		
 		pageNavigator.AddPage("Unity", new EnginePage<UnityEngineProject>(userData.UnitySettings));
 		pageNavigator.AddPage("Unreal", new EnginePage<UnrealEngineProject>(userData.UnrealSettings));
+		pageNavigator.AddPage("Settings", new SettingsPage(), false);
 		
 		//TODO: Save the last one and use that
 		pageNavigator.SwitchPage("Unity");
@@ -122,20 +123,25 @@ public partial class MainWindow : ContentWindow
 		{
 			RemoveContentToWindow(welcomeContainer);
 
-			var settingsScrollView = new ScrollView();
-			settingsScrollView.AddContent(new SettingsPage());
+			var introPage = new IntroPage();
 
-			var finishSetupbutton = new Button
+			var layout = new Grid
 			{
-				Content = "Finish Setup",
-				Margin = new Thickness(0, 0, 0, 10)
+				RowDefinitions =
+				{
+					new RowDefinition(GridLength.Star),
+					new RowDefinition(GridLength.Auto)
+				},
+				VerticalAlignment = VerticalAlignment.Stretch,
+				HorizontalAlignment = HorizontalAlignment.Stretch
 			};
 
-			settingsScrollView.AddContent(finishSetupbutton);
+			Grid.SetRow(introPage, 0);
+			layout.Children.Add(introPage);
 
-			var settingScrollViewContainer = CenterContentInWindow(settingsScrollView, 0.1);
-
-			finishSetupbutton.Click += (_, _) =>
+			var settingScrollViewContainer = CenterContentInWindow(layout, 0.1);
+			
+			introPage.OnSetupComplete += () =>
 			{
 				RemoveContentToWindow(settingScrollViewContainer);
 				CreateMainUi();

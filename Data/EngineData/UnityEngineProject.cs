@@ -1,7 +1,6 @@
 ﻿using GameBridge.Ui;
 using GameBridge.Ui.Factory.UiFabrication.Attributes;
 using GameBridge.Ui.Factory.UiFabrication.DataBinder;
-using GameBridge.Ui.Factory.UiFabrication.Decorators;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +17,6 @@ public class UnityEngineProject : IEngineProject
 	public string ProjectDirectory { get; set; }
 
 	[InputField]
-	[Button(nameof(LoadProject))]
 	public string ProjectVersion { get; set; }
 
 	public void LoadProject()
@@ -31,7 +29,7 @@ public class UnityEngineProject : IEngineProject
 
 		string editorPath = "";
 
-		foreach (var engineInstallPath in DataManager.UserData.UnitySettings.EngineInstallPaths)
+		foreach (var engineInstallPath in DataManager.UserData.UnitySettings.IndividualEngineInstallPaths)
 		{
 			if (engineInstallPath.Version != ProjectVersion) continue;
 			ShowMessage($"Project version: {ProjectVersion} : engine install path: {engineInstallPath.Version}");

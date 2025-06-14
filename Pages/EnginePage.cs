@@ -1,10 +1,8 @@
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Threading;
 using GameBridge.Data.EngineData;
 using GameBridge.Ui;
 using GameBridge.Ui.Factory;
@@ -18,7 +16,7 @@ public class EnginePage<T> : Page where T : IEngineProject
 {
 	private readonly Grid grid = new()
 	{
-		Margin = new Thickness(10),
+		Margin = new Thickness(10, 0, 10, 10),
 		HorizontalAlignment = HorizontalAlignment.Stretch,
 		VerticalAlignment = VerticalAlignment.Top
 	};
@@ -48,11 +46,11 @@ public class EnginePage<T> : Page where T : IEngineProject
 		{
 			if (AutoGridWidth && Bounds.Width > 0)
 			{
-				int newWidth = Math.Max(1, (int)(Bounds.Width / 300));
+				var newWidth = Math.Max(1, (int)(Bounds.Width / 300));
 				if (newWidth != gridWidth)
 				{
 					gridWidth = newWidth;
-					AnimateGridReposition();
+					RepositionGrid();
 				}
 			}
 		};
@@ -61,33 +59,118 @@ public class EnginePage<T> : Page where T : IEngineProject
 	private void BuildInitialGrid()
 	{
 		grid.ColumnDefinitions.Clear();
-		for (int i = 0; i < gridWidth; i++)
+		for (var i = 0; i < gridWidth; i++)
+		{
 			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+		}
 
 		var projects = engineSettings.GetProjects();
-		engineSettings.GetEngineInstallPaths();
+		var installs = engineSettings.GetEngineInstallPaths();
 
-		for (int i = 0; i < projects.Count; i++)
+		for (var i = 0; i < projects.Count; i++)
 		{
 			var project = projects[i];
-			var section = new Section(project.ProjectName)
-			{
-				HorizontalAlignment = HorizontalAlignment.Stretch
-			};
 
+			Control settingsContent = null;
+			
 			switch (project)
 			{
 				case UnityEngineProject unity:
-					section.AddContent(UiFactory.ProcessClass(unity) ?? new TextBlock { Text = "Failed to draw project GUI" });
+					settingsContent = UiFactory.ProcessClass(unity) ??
+					                  new TextBlock { Text = "Failed to draw project GUI" };
 					break;
 				case UnrealEngineProject unreal:
-					section.AddContent(UiFactory.ProcessClass(unreal) ?? new TextBlock { Text = "Failed to draw project GUI" });
+					settingsContent = UiFactory.ProcessClass(unreal) ??
+					                  new TextBlock { Text = "Failed to draw project GUI" };
 					break;
 			}
+			
+			var settingsExpander = new Expander
+			{
+				Header = "Engine Settings",
+				Content = settingsContent,
+				IsExpanded = false,
+				Margin = new Thickness(0, 4, 0, 4)
+			};
+
+			var stack = new StackPanel
+			{
+				Spacing = 6
+			};
+
+			var header = new Grid
+			{
+				ColumnDefinitions =
+				{
+					new ColumnDefinition(GridLength.Star),
+					new ColumnDefinition(GridLength.Auto)
+				}
+			};
+
+			header.Children.Add(new TextBlock
+			{
+				Text = project.ProjectName,
+				FontWeight = FontWeight.Bold,
+				FontSize = 16
+			});
+
+			var removeBtn = new Button
+			{
+				Content = "✕",
+				Padding = new Thickness(6, 2, 6, 2),
+				Background = Brushes.Transparent,
+				Foreground = Brushes.Red,
+				BorderBrush = null
+			};
+			removeBtn.Click += (_, _) =>
+			{
+				// REMOVE PROJECT - method not yet implemented
+			};
+			Grid.SetColumn(removeBtn, 1);
+			header.Children.Add(removeBtn);
+
+			stack.Children.Add(header);
+
+			var launchRow = new StackPanel
+			{
+				Orientation = Orientation.Horizontal,
+				Spacing = 6
+			};
+
+			var launchBtn = new Button
+			{
+				Content = "Launch Project"
+			};
+			launchBtn.Click += (_, _) => project.LoadProject();
+
+			launchRow.Children.Add(launchBtn);
+
+			if (!HasMatchingInstall(project, installs))
+			{
+				var downloadBtn = new Button
+				{
+					Content = $"Download {project.ProjectVersion}",
+					Background = Brushes.Orange,
+					Foreground = Brushes.Black
+				};
+				downloadBtn.Click += (_, _) =>
+				{
+					// DOWNLOAD VERSION - method not yet implemented
+				};
+				launchRow.Children.Add(downloadBtn);
+			}
+
+			stack.Children.Add(launchRow);
+			stack.Children.Add(settingsExpander);
+
+			var section = new Section
+			{
+				ContentContainer = { Children = { stack } }
+			};
 
 			var sectionWrapper = new Border
 			{
-				Margin = new Thickness(3),
+				Margin = new Thickness(2, 0, 2, 2),
 				Child = section
 			};
 
@@ -95,69 +178,35 @@ public class EnginePage<T> : Page where T : IEngineProject
 			grid.Children.Add(sectionWrapper);
 		}
 
-		AnimateGridReposition();
+		RepositionGrid();
+	}
+	
+	private bool HasMatchingInstall(IEngineProject project, List<EngineInstall> installs)
+	{
+		return installs.Any(install =>
+			install.Version.Equals(project.ProjectVersion, StringComparison.OrdinalIgnoreCase));
 	}
 
-	private void AnimateGridReposition()
+	private void RepositionGrid()
 	{
-		var previousPositions = new Dictionary<Control, Point>();
-
-		// 1. Record the current positions before layout change
-		foreach (var control in sectionWrappers)
+		grid.ColumnDefinitions.Clear();
+		for (var i = 0; i < gridWidth; i++)
 		{
-			var oldPoint = control.TranslatePoint(new Point(0, 0), this);
-			if (oldPoint != null)
-			{
-				previousPositions[control] = oldPoint.Value;
-			}
+			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
 		}
 
-		// 2. Apply new grid layout
-		grid.ColumnDefinitions.Clear();
-		for (int i = 0; i < gridWidth; i++)
-			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-
-		int rows = (int)Math.Ceiling((double)sectionWrappers.Count / gridWidth);
+		var rows = (int)Math.Ceiling((double)sectionWrappers.Count / gridWidth);
 		grid.RowDefinitions.Clear();
-		for (int i = 0; i < rows; i++)
+		for (var i = 0; i < rows; i++)
+		{
 			grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+		}
 
-		for (int i = 0; i < sectionWrappers.Count; i++)
+		for (var i = 0; i < sectionWrappers.Count; i++)
 		{
 			var control = sectionWrappers[i];
 			Grid.SetRow(control, i / gridWidth);
 			Grid.SetColumn(control, i % gridWidth);
 		}
-
-		// 3. After layout, animate them to new positions
-		Dispatcher.UIThread.Post(() =>
-		{
-			foreach (var control in sectionWrappers)
-			{
-				var oldPos = previousPositions.TryGetValue(control, out var val) ? val : default;
-				var newPos = control.TranslatePoint(new Point(0, 0), this) ?? default;
-
-				double dx = oldPos.X - newPos.X;
-				double dy = oldPos.Y - newPos.Y;
-
-				// Start from old offset
-				control.RenderTransform = new TranslateTransform { X = dx, Y = dy };
-
-				// Add transition
-				control.Transitions = new Transitions
-				{
-					new TransformOperationsTransition
-					{
-						Property = Control.RenderTransformProperty,
-						Duration = TimeSpan.FromMilliseconds(300),
-						Easing = new Avalonia.Animation.Easings.CubicEaseOut()
-					}
-				};
-
-				// Animate to new position (0,0)
-				(control.RenderTransform as TranslateTransform)!.X = 0;
-				(control.RenderTransform as TranslateTransform)!.Y = 0;
-			}
-		}, DispatcherPriority.Render);
 	}
 }
