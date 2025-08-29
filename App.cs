@@ -63,6 +63,7 @@ public class App : Application
 
 	public override void OnFrameworkInitializationCompleted()
 	{
+		HoloTheme.Register(this);
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
 		{
 			desktop.MainWindow = new MainWindow(); // Define the main window programmatically.

@@ -54,7 +54,7 @@ public partial class MainWindow : ContentWindow
 
 	private void CreateWindowContent()
 	{
-		//TODO: Check if we have setup GameBridge, if so switch to main page
+		//TODO: Check if we have set up GameBridge, if so switch to main page
 
 		if (DataManager.DoesSaveDataExist())
 		{
