@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Themes.Simple;
 using GameBridge.Data;
+using GameBridge.CustomStyles;
 using Avalonia.Themes.Fluent;
 using Semi.Avalonia;
 using System;

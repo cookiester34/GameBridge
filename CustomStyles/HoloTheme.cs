@@ -6,7 +6,7 @@ using Avalonia.Styling;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 
-namespace GameBridge.Styles
+namespace GameBridge.CustomStyles
 {
     public static class HoloTheme
     {
