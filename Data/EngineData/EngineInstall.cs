@@ -14,6 +14,23 @@ public class EngineInstall
 
 	private void HandleInstallPathChange(string newPath)
 	{
-		Version = newPath.Split(Path.DirectorySeparatorChar)[^1];
+		if (string.IsNullOrWhiteSpace(newPath))
+			return;
+
+		try
+		{
+			// Get the folder that contains "Unity.exe"
+			var editorFolder = Path.GetDirectoryName(newPath);
+
+			// Go one level up (the folder that contains "Editor")
+			var versionFolder = Path.GetDirectoryName(editorFolder);
+
+			// Last folder name is the version string
+			Version = Path.GetFileName(versionFolder);
+		}
+		catch
+		{
+			Version = "Unknown";
+		}
 	}
 }

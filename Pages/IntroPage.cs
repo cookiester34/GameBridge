@@ -196,6 +196,10 @@ public class IntroPage : Page
                 DataManager.SaveData();
                 ShowStep(currentStep);
             }
+            else
+            {
+                Console.WriteLine("Failed to install Unity Hub default install path");
+            }
         };
 
         contentPanel.Children.Add(detectDefaultButton);

@@ -13,7 +13,6 @@ namespace GameBridge;
 
 public partial class MainWindow : ContentWindow
 {
-	public static event Action<Size> WindowSizeChanged;
 	public MainWindow()
 	{
 		SetupMainWindow();
@@ -21,17 +20,28 @@ public partial class MainWindow : ContentWindow
 		BuildCustomTitleBar();
 
 		CreateWindowContent();
-
-		LayoutUpdated += MainWindowLayoutUpdated;
+		
+		WindowPlacementManager.Attach(this, "ProjectBridge");
 
 		// Debug
 		this.AttachDevTools();
 	}
 
-	private void MainWindowLayoutUpdated(object? sender, EventArgs e)
+	// Debug
+	protected override void RebuildUi()
 	{
-		var size = Bounds.Size;
-		WindowSizeChanged?.Invoke(size);
+		base.RebuildUi();
+		
+		SetupMainWindow();
+
+		BuildCustomTitleBar();
+
+		CreateWindowContent();
+		
+		WindowPlacementManager.Attach(this, "ProjectBridge");
+
+		// Debug
+		this.AttachDevTools();
 	}
 
 	private void SetupMainWindow()
@@ -70,7 +80,8 @@ public partial class MainWindow : ContentWindow
 	{
 		var userData = DataManager.UserData;
 		var pageNavigator = new PageNavigator();
-		
+
+		pageNavigator.AddTitle("Engines");
 		pageNavigator.AddPage("Unity", new EnginePage<UnityEngineProject>(userData.UnitySettings));
 		pageNavigator.AddPage("Unreal", new EnginePage<UnrealEngineProject>(userData.UnrealSettings));
 		pageNavigator.AddPage("Settings", new SettingsPage(), false);

@@ -32,7 +32,8 @@ public partial class MainWindow
 			Text = "GameBridge",
 			FontWeight = FontWeight.Bold,
 			VerticalAlignment = VerticalAlignment.Center,
-			Margin = new Thickness(10, 0)
+			Margin = new Thickness(10, 0),
+			Padding = new Thickness(0, 5, 0, 0)
 		};
 		DockPanel.SetDock(titleText, Dock.Left);
 		titleBar.Children.Add(titleText);
@@ -73,26 +74,20 @@ public partial class MainWindow
 			Content = new TextBlock
 			{
 				FontFamily = new FontFamily("Segoe Fluent Icons"),
-				Text = content, // Unicode for "Close"
+				Text = content,
 				FontSize = 10,
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Padding = new Thickness(0),
+				Padding = new Thickness(0, 5, 0, 0),
 				Width = 15,
 			},
-			// Content = new TextBlock
-			// {
-			// 	Text = content,
-			// 	VerticalAlignment = VerticalAlignment.Center,
-			// 	HorizontalAlignment = HorizontalAlignment.Center,
-			// 	FontSize = 16
-			// },
 			Width = 30,
 			Height = 30,
 			CornerRadius = new CornerRadius(0),
 			BorderThickness = new Thickness(0),
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
+			VerticalContentAlignment = VerticalAlignment.Center,
 			Background = WindowColors.UiColor
 		};
 

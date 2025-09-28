@@ -61,7 +61,7 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 			}
 		}
 
-		return [..IndividualProjectPaths]; //fancy
+		return [..IndividualProjectPaths];
 	}
 
 	public List<EngineInstall> GetEngineInstallPaths()
@@ -93,6 +93,6 @@ public class UnityEngineSettings : IEngineSettings<UnityEngineProject>
 			}
 		}
 
-		return [..IndividualEngineInstallPaths]; //fancy
+		return [..IndividualEngineInstallPaths];
 	}
 }

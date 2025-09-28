@@ -45,7 +45,7 @@ public class UiCollection : UserControl
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Stretch,
-			Spacing = 8
+			Spacing = 4
 		};
 
 		// Header row
@@ -62,7 +62,6 @@ public class UiCollection : UserControl
 		headerGrid.Children.Add(new TextBlock
 		{
 			Text = name,
-			FontWeight = FontWeight.Bold,
 			VerticalAlignment = VerticalAlignment.Center,
 			Margin = new Thickness(2)
 		});
@@ -79,10 +78,9 @@ public class UiCollection : UserControl
 		// Collapsible container
 		var collapsibleBorder = new Border
 		{
-			BorderThickness = new Thickness(1),
 			CornerRadius = new CornerRadius(4),
-			Padding = new Thickness(6),
-			Margin = new Thickness(0, 4, 0, 0),
+			Padding = new Thickness(2),
+			Margin = new Thickness(0, 2, 0, 0),
 			Background = WindowColors.ThirdBackgroundColor,
 			IsVisible = false
 		};
@@ -99,7 +97,7 @@ public class UiCollection : UserControl
 		{
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Stretch,
-			Spacing = 6
+			Spacing = 4
 		};
 		collectionContent.Children.Add(elementPanel);
 
@@ -107,7 +105,7 @@ public class UiCollection : UserControl
 		{
 			Orientation = Orientation.Horizontal,
 			HorizontalAlignment = HorizontalAlignment.Right,
-			Spacing = 4,
+			Spacing = 2,
 			Margin = new Thickness(2),
 		};
 		collectionContent.Children.Add(buttonRow);
@@ -123,7 +121,7 @@ public class UiCollection : UserControl
 			},
 			Width = 30,
 			Height = 30,
-			Padding = new Thickness(5)
+			Padding = new Thickness(2)
 		};
 
 		var removeButton = new Button
@@ -137,7 +135,7 @@ public class UiCollection : UserControl
 			},
 			Width = 30,
 			Height = 30,
-			Padding = new Thickness(5)
+			Padding = new Thickness(2)
 		};
 
 		addButton.Click += (_, _) =>
@@ -208,7 +206,7 @@ public class UiCollection : UserControl
 		{
 			Background = WindowColors.ThirdBackgroundColor,
 			CornerRadius = new CornerRadius(4),
-			Padding = new Thickness(6),
+			Padding = new Thickness(2),
 			Child = content
 		};
 		elementPanel.Children.Add(border);
@@ -216,7 +214,8 @@ public class UiCollection : UserControl
 		var fieldContainer = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
-			HorizontalAlignment = HorizontalAlignment.Stretch
+			HorizontalAlignment = HorizontalAlignment.Stretch,
+			VerticalAlignment = VerticalAlignment.Center
 		};
 		Grid.SetColumn(fieldContainer, 0);
 		content.Children.Add(fieldContainer);
@@ -225,7 +224,7 @@ public class UiCollection : UserControl
 		{
 			Content = "Remove",
 			Margin = new Thickness(4),
-			HorizontalAlignment = HorizontalAlignment.Right
+			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		removeButton.Click += (_, _) => RemoveContent(border);
 		Grid.SetColumn(removeButton, 1);

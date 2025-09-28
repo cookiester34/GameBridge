@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using GameBridge.Data;
 using System;
@@ -27,11 +28,9 @@ namespace GameBridge.Ui
             filePathTextBox = new TextBox
             {
                 Watermark = "Path...",
-                Height = 25,
                 Text = path ?? string.Empty,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Center,
-                Width = double.NaN
             };
 
             filePathTextBox.TextChanged += (o, args) => TextChanged?.Invoke(o, args);
@@ -41,10 +40,6 @@ namespace GameBridge.Ui
                 Content = "Browse",
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Foreground = WindowColors.TextColor,
-                Background = WindowColors.UiColor,
-                CornerRadius = new CornerRadius(3),
-                Padding = new Thickness(5),
                 Margin = new Thickness(5,0,0,0),
                 Width = 80
             };

@@ -17,23 +17,23 @@ public static partial class UiFactory
 		var value = memberInfo.GetValue(target);
 		var name = FactoryHelpers.NiceString(memberInfo.Name);
 		var decorators = attributes.OfType<IDecorator>().ToArray();
+
+		Control field = null;
 		
 		if (memberType.IsArray || (typeof(IEnumerable).IsAssignableFrom(memberType) && memberType != typeof(string)))
 		{
 			if (value is not IEnumerable collection) return null;
 
-			var collectionUi = new UiCollection(name, memberType, attributes);
+			field = new UiCollection(name, memberType, attributes);
 
-			collectionUi.InitializeUi(collection);
-
-			return collectionUi;
+			((UiCollection)field).InitializeUi(collection);
 		}
 
-		var field = CreateAndBindUiField(memberType, attributes, name, value, memberInfo, target);
+		field ??= CreateAndBindUiField(memberType, attributes, name, value, memberInfo, target);
 		if (field == null) return null;
 
 		Control? finishedField;
-		if (field is not ExplorerField)
+		if (field is not ExplorerField and not UiCollection)
 		{
 			finishedField = FactoryHelpers.CreateNameField(name, field,
 				memberType is { IsClass: true } && !typeof(IEnumerable).IsAssignableFrom(memberType));
@@ -43,27 +43,31 @@ public static partial class UiFactory
 			finishedField = field;
 		}
 
+		if (finishedField == null) return null;
+		
+		finishedField.Name = name;
+
 		if (decorators.Length > 0)
 		{
 			var topLevel = decorators.Where(decorator => decorator.IsTopDecorator);
 			var bottomLevel = decorators.Where(decorator => !decorator.IsTopDecorator);
-			
+
 			var container = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
 				HorizontalAlignment = HorizontalAlignment.Stretch,
 				Spacing = 6
 			};
-			
+
 			// top decorators
 			foreach (var decorator in topLevel)
 			{
 				container.AddChild(decorator.CreateDecorator(target));
 			}
-			
+
 			//Field
 			container.AddChild(finishedField);
-			
+
 			//bottom decorators
 			foreach (var decorator in bottomLevel)
 			{
@@ -72,9 +76,7 @@ public static partial class UiFactory
 
 			return container;
 		}
-		else
-		{
-			return finishedField;
-		}
+
+		return finishedField;
 	}
 }

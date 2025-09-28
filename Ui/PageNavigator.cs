@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using GameBridge.Data;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,10 @@ namespace GameBridge.Ui
         private readonly Dictionary<string, PageArg> pages = new();
         private readonly StackPanel topButtonsPanel;
         private readonly StackPanel bottomButtonsPanel;
+        
+        private Dictionary<string, Button> buttons = new();
         private Page? activePage;
+        private Button? activeButton;
 
         public PageNavigator()
         {
@@ -35,7 +39,7 @@ namespace GameBridge.Ui
 
             var sidebarBorder = new Border
             {
-                CornerRadius = new CornerRadius(0, 10, 0, 0),
+                CornerRadius = new CornerRadius(0, 6, 0, 0),
                 Margin = new Thickness(0, 2, 0, 0),
                 Background = WindowColors.SecondaryBackgroundColor,
                 Child = sidebarGrid,
@@ -65,6 +69,23 @@ namespace GameBridge.Ui
             SetRow(bottomButtonsPanel, 2);
             sidebarGrid.Children.Add(bottomButtonsPanel);
         }
+        
+        public void AddTitle(string title, bool alignTop = true)
+        {
+            var button = new TextBlock()
+            {
+                Text = title,
+                FontWeight = FontWeight.Medium,
+                FontSize = 14,
+                Padding = new Thickness(9, 0, 4, 4),
+                Margin = new Thickness(1),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Foreground = new SolidColorBrush(Color.Parse("#8c8c8c"))
+            };
+
+            var targetPanel = alignTop ? topButtonsPanel : bottomButtonsPanel;
+            targetPanel.Children.Add(button);
+        }
 
         public void AddPage(string name, Page page, bool alignTop = true)
         {
@@ -75,13 +96,9 @@ namespace GameBridge.Ui
             {
                 Content = name,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                Margin = new Thickness(0),
-                Padding = new Thickness(6, 4),
-                Background = WindowColors.SecondaryBackgroundColor,
-                BorderThickness = new Thickness(0),
-                CornerRadius = new CornerRadius(0)
+                Classes = { "nav-btn" }
             };
-
+            buttons[name] = button;
             button.Click += (_, _) => SwitchPage(name);
 
             pages[name] = new PageArg
@@ -91,18 +108,11 @@ namespace GameBridge.Ui
                 IsTopAligned = alignTop
             };
 
-            if (alignTop)
-            {
-                if (topButtonsPanel.Children.Count == 0)
-                {
-                    button.CornerRadius = new CornerRadius(0, 10, 0, 0);
-                }
-                topButtonsPanel.Children.Add(button);
-            }
-            else
-            {
-                bottomButtonsPanel.Children.Add(button);
-            }
+            var targetPanel = alignTop ? topButtonsPanel : bottomButtonsPanel;
+            targetPanel.Children.Add(button);
+
+            if (activePage == null)
+                SwitchPage(name);
         }
 
         public void RemovePage(string name)
@@ -134,6 +144,10 @@ namespace GameBridge.Ui
 
             SetColumn(activePage, 1);
             Children.Add(activePage);
+
+            activeButton?.Classes.Remove("nav-btn-active");
+            activeButton = buttons[name];
+            activeButton.Classes.Add("nav-btn-active");
         }
 
         private struct PageArg

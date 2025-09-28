@@ -9,6 +9,7 @@ public static partial class UiFactory
 	public static Control? ProcessClass<T>(T input, Type? givenType = null)
 	{
 		var control = new Section();
+		control.Name = typeof(T).Name;
 
 		if (input == null) return control;
 

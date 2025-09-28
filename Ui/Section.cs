@@ -39,8 +39,9 @@ public class Section : Panel
 		var border = new Border
 		{
 			Background = WindowColors.SecondaryBackgroundColor,
-			BorderThickness = new Thickness(2),
-			CornerRadius = new CornerRadius(10),
+			BorderThickness = new Thickness(2, 0, 0, 0),
+			BorderBrush = WindowColors.BackgroundTextColor,
+			CornerRadius = new CornerRadius(0, 10, 10, 0),
 			Padding = new Thickness(10),
 			HorizontalAlignment = HorizontalAlignment.Stretch,
 			VerticalAlignment = VerticalAlignment.Top,

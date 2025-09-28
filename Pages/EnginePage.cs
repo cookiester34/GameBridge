@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GameBridge.Data.EngineData;
@@ -8,14 +9,17 @@ using GameBridge.Ui;
 using GameBridge.Ui.Factory;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace GameBridge.Pages;
 
 public class EnginePage<T> : Page where T : IEngineProject
 {
-	private readonly Grid grid = new()
+	private readonly StackPanel list = new()
 	{
+		Orientation = Orientation.Vertical,
+		Spacing = 8,
 		Margin = new Thickness(10, 0, 10, 10),
 		HorizontalAlignment = HorizontalAlignment.Stretch,
 		VerticalAlignment = VerticalAlignment.Top
@@ -23,8 +27,6 @@ public class EnginePage<T> : Page where T : IEngineProject
 
 	private readonly ScrollViewer scrollView;
 	private readonly List<Border> sectionWrappers = new();
-	private readonly bool AutoGridWidth = true;
-	private int gridWidth = 3;
 
 	private readonly IEngineSettings<T> engineSettings;
 
@@ -36,33 +38,18 @@ public class EnginePage<T> : Page where T : IEngineProject
 		{
 			VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
 			HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-			Content = grid
+			Content = list,
+			Margin = new Thickness(0, 5, 0, 0)
 		};
 
 		AddContent(scrollView);
-		BuildInitialGrid();
-
-		LayoutUpdated += (_, _) =>
-		{
-			if (AutoGridWidth && Bounds.Width > 0)
-			{
-				var newWidth = Math.Max(1, (int)(Bounds.Width / 300));
-				if (newWidth != gridWidth)
-				{
-					gridWidth = newWidth;
-					RepositionGrid();
-				}
-			}
-		};
+		BuildList();
 	}
 
-	private void BuildInitialGrid()
+	private void BuildList()
 	{
-		grid.ColumnDefinitions.Clear();
-		for (var i = 0; i < gridWidth; i++)
-		{
-			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-		}
+		list.Children.Clear();
+		sectionWrappers.Clear();
 
 		var projects = engineSettings.GetProjects();
 		var installs = engineSettings.GetEngineInstallPaths();
@@ -71,142 +58,220 @@ public class EnginePage<T> : Page where T : IEngineProject
 		{
 			var project = projects[i];
 
-			Control settingsContent = null;
-			
-			switch (project)
+			BuildProjectUi(project, installs);
+		}
+	}
+
+	private void BuildProjectUi(IEngineProject project, List<EngineInstall> installs)
+	{
+		// at top of method
+		var mutedBrush =
+			(Application.Current?.Resources.TryGetResource("Brush.Muted", null, out var r) == true && r is IBrush b)
+				? b
+				: new SolidColorBrush(Color.Parse("#AAB2C0"));
+
+		// container card
+		var card = new Border
+		{
+			Classes = { "card" },
+			Margin = new Thickness(2, 0, 2, 2)
+		};
+
+		var root = new Grid
+		{
+			RowDefinitions =
 			{
-				case UnityEngineProject unity:
-					settingsContent = UiFactory.ProcessClass(unity) ??
-					                  new TextBlock { Text = "Failed to draw project GUI" };
-					break;
-				case UnrealEngineProject unreal:
-					settingsContent = UiFactory.ProcessClass(unreal) ??
-					                  new TextBlock { Text = "Failed to draw project GUI" };
-					break;
+				new RowDefinition(GridLength.Auto), // header
+				new RowDefinition(GridLength.Auto) // meta
+			},
+			ColumnDefinitions =
+			{
+				new ColumnDefinition(new GridLength(200)),
+				new ColumnDefinition(GridLength.Star),
+				new ColumnDefinition(GridLength.Auto)
 			}
-			
-			var settingsExpander = new Expander
-			{
-				Header = "Engine Settings",
-				Content = settingsContent,
-				IsExpanded = false,
-				Margin = new Thickness(0, 4, 0, 4)
-			};
+		};
 
-			var stack = new StackPanel
-			{
-				Spacing = 6
-			};
+		// --- Header: Name | Version ▼ | X ---
+		var nameBlock = new TextBlock
+		{
+			Text = project.ProjectName,
+			FontWeight = FontWeight.Medium,
+			FontSize = 16,
+			MaxWidth = 200,
+			TextTrimming = TextTrimming.LeadingCharacterEllipsis
+		};
+		root.Children.Add(nameBlock);
 
-			var header = new Grid
-			{
-				ColumnDefinitions =
-				{
-					new ColumnDefinition(GridLength.Star),
-					new ColumnDefinition(GridLength.Auto)
-				}
-			};
-
-			header.Children.Add(new TextBlock
-			{
-				Text = project.ProjectName,
-				FontWeight = FontWeight.Bold,
-				FontSize = 16
-			});
-
-			var removeBtn = new Button
-			{
-				Content = "✕",
-				Padding = new Thickness(6, 2, 6, 2),
-				Background = Brushes.Transparent,
-				Foreground = Brushes.Red,
-				BorderBrush = null
-			};
-			removeBtn.Click += (_, _) =>
-			{
-				// REMOVE PROJECT - method not yet implemented
-			};
-			Grid.SetColumn(removeBtn, 1);
-			header.Children.Add(removeBtn);
-
-			stack.Children.Add(header);
-
-			var launchRow = new StackPanel
+		// Version button with chevron
+		var versionBtn = new Button
+		{
+			Classes = { "nav-btn" },
+			Padding = new Thickness(0, 0),
+			Margin = new Thickness(0, 2, 0, 0),
+			HorizontalAlignment = HorizontalAlignment.Left,
+			Content = new StackPanel
 			{
 				Orientation = Orientation.Horizontal,
-				Spacing = 6
-			};
-
-			var launchBtn = new Button
-			{
-				Content = "Launch Project"
-			};
-			launchBtn.Click += (_, _) => project.LoadProject();
-
-			launchRow.Children.Add(launchBtn);
-
-			if (!HasMatchingInstall(project, installs))
-			{
-				var downloadBtn = new Button
+				Spacing = 6,
+				VerticalAlignment =  VerticalAlignment.Center,
+				Children =
 				{
-					Content = $"Download {project.ProjectVersion}",
-					Background = Brushes.Orange,
-					Foreground = Brushes.Black
-				};
-				downloadBtn.Click += (_, _) =>
-				{
-					// DOWNLOAD VERSION - method not yet implemented
-				};
-				launchRow.Children.Add(downloadBtn);
+					new TextBlock
+					{
+						Text = project.ProjectVersion,
+						Padding = new Thickness(0, 5, 0, 0),
+					},
+					new StackPanel
+					{
+						Orientation = Orientation.Vertical,
+						Spacing = -2, // slight overlap so they look like one icon
+						Children =
+						{
+							new PathIcon
+							{
+								Data = Geometry.Parse("M 0 6 L 4 2 L 8 6 Z"), // up triangle
+								Width = 8,
+								Height = 6,
+								Foreground = Brushes.White,
+								Margin = new Thickness(0, 5, 0, 0)
+							},
+							new PathIcon
+							{
+								Data = Geometry.Parse("M 0 2 L 4 6 L 8 2 Z"), // down triangle
+								Width = 8,
+								Height = 6,
+								Foreground = Brushes.White,
+								Margin = new Thickness(0, 3, 0, 0)
+							}
+						}
+					}
+				}
 			}
+		};
+		versionBtn.Click += async (_, _) =>
+		{
+			// TODO: open your version select dialog
+			// await new VersionPickerDialog(...).ShowDialog(this.GetWindow());
+		};
+		Grid.SetColumn(versionBtn, 1);
+		root.Children.Add(versionBtn);
 
-			stack.Children.Add(launchRow);
-			stack.Children.Add(settingsExpander);
+		// Remove button
+		var removeBtn = new Button
+		{
+			Content = "✕",
+			Padding = new Thickness(10, 6),
+			Foreground = Brushes.IndianRed,
+			Background = Brushes.Transparent,
+			BorderBrush = Brushes.Transparent,
+			HorizontalAlignment = HorizontalAlignment.Right
+		};
+		removeBtn.Click += (_, _) =>
+		{
+			// TODO: remove project from settings
+		};
+		Grid.SetColumn(removeBtn, 2);
+		root.Children.Add(removeBtn);
+		
+		var launchBtn = new Button
+		{
+			Content = "Launch Project"
+		};
+		launchBtn.Click += (_, _) => project.LoadProject();
+		Grid.SetColumn(launchBtn, 2);
+		Grid.SetRow(launchBtn, 1);
+		root.Children.Add(launchBtn);
 
-			var section = new Section
+		// --- Meta row: Project Path | Last Modified ---
+		var metaGrid = new Grid
+		{
+			ColumnDefinitions =
 			{
-				ContentContainer = { Children = { stack } }
-			};
+				new ColumnDefinition(new GridLength(200)),
+				new ColumnDefinition(GridLength.Auto)
+			},
+			Margin = new Thickness(0, 6, 0, 0)
+		};
 
-			var sectionWrapper = new Border
+		var pathBlock = new TextBlock
+		{
+			Text = project.ProjectDirectory,
+			Foreground = mutedBrush,
+			MaxWidth = 200,
+			TextTrimming = TextTrimming.LeadingCharacterEllipsis
+		};
+
+		pathBlock.Cursor = new Cursor(StandardCursorType.Hand);
+		pathBlock.PointerPressed += (_, e) =>
+		{
+			if (e.GetCurrentPoint(pathBlock).Properties.IsLeftButtonPressed)
 			{
-				Margin = new Thickness(2, 0, 2, 2),
-				Child = section
-			};
+				try
+				{
+					OpenFolder(project.ProjectDirectory);
+				}
+				catch
+				{
+					/* ignore */
+				}
+			}
+		};
+		metaGrid.Children.Add(pathBlock);
+		
+		var lastAccess = Directory.Exists(project.ProjectDirectory)
+			? Directory.GetLastAccessTime(project.ProjectDirectory)
+			: DateTime.MinValue;
 
-			sectionWrappers.Add(sectionWrapper);
-			grid.Children.Add(sectionWrapper);
-		}
+		var lastAccessBlock = new TextBlock
+		{
+			Text = ToRelativeAgo(lastAccess),
+			Foreground = mutedBrush,
+			FontSize = 12
+		};
+		Grid.SetColumn(lastAccessBlock, 1);
+		metaGrid.Children.Add(lastAccessBlock);
 
-		RepositionGrid();
+		Grid.SetRow(metaGrid, 1);
+		Grid.SetColumnSpan(metaGrid, 2);
+		root.Children.Add(metaGrid);
+
+		card.Child = root;
+
+		// wrap into outer container used by page
+		var sectionWrapper = new Border { Margin = new Thickness(2, 0, 2, 2), Child = card };
+		sectionWrappers.Add(sectionWrapper);
+		list.Children.Add(sectionWrapper);
 	}
 	
+	private static string ToRelativeAgo(DateTime when)
+	{
+		if (when == DateTime.MinValue) return "unknown";
+		var span = DateTime.Now - when;
+		if (span.TotalSeconds < 90) return $"{(int)Math.Max(1, span.TotalSeconds)}s ago";
+		if (span.TotalMinutes < 90) return $"{(int)Math.Round(span.TotalMinutes)} mins ago";
+		if (span.TotalHours   < 36) return $"{(int)Math.Round(span.TotalHours)} hrs ago";
+		if (span.TotalDays    < 14) return $"{(int)Math.Round(span.TotalDays)} days ago";
+		if (span.TotalDays    < 70) return $"{(int)Math.Round(span.TotalDays / 7)} wks ago";
+		if (span.TotalDays    < 365) return $"{(int)Math.Round(span.TotalDays / 30)} mos ago";
+		return $"{(int)Math.Round(span.TotalDays / 365)} yrs ago";
+	}
+
+	private static void OpenFolder(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path)) return;
+
+		if (OperatingSystem.IsWindows())
+			System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+		else if (OperatingSystem.IsMacOS())
+			System.Diagnostics.Process.Start("open", $"\"{path}\"");
+		else
+			System.Diagnostics.Process.Start("xdg-open", $"\"{path}\"");
+	}
+
 	private bool HasMatchingInstall(IEngineProject project, List<EngineInstall> installs)
 	{
 		return installs.Any(install =>
 			install.Version.Equals(project.ProjectVersion, StringComparison.OrdinalIgnoreCase));
-	}
-
-	private void RepositionGrid()
-	{
-		grid.ColumnDefinitions.Clear();
-		for (var i = 0; i < gridWidth; i++)
-		{
-			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-		}
-
-		var rows = (int)Math.Ceiling((double)sectionWrappers.Count / gridWidth);
-		grid.RowDefinitions.Clear();
-		for (var i = 0; i < rows; i++)
-		{
-			grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-		}
-
-		for (var i = 0; i < sectionWrappers.Count; i++)
-		{
-			var control = sectionWrappers[i];
-			Grid.SetRow(control, i / gridWidth);
-			Grid.SetColumn(control, i % gridWidth);
-		}
 	}
 }

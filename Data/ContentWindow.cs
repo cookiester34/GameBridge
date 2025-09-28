@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Input;
 using GameBridge.Ui;
 using Avalonia.Layout;
 using System;
@@ -14,6 +15,22 @@ public abstract class ContentWindow : Window
 		Ctx = new WindowContext();
 		Ctx.DockPanel.LastChildFill = true; // Important for layout to fill space
 		Content = Ctx.DockPanel;
+		this.KeyDown += OnKeyDown;
+	}
+	
+	private void OnKeyDown(object? sender, KeyEventArgs e)
+	{
+		if (e.Key == Key.R && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+		{
+			// Ctrl+R pressed
+			RebuildUi();
+			e.Handled = true;
+		}
+	}
+
+	protected virtual void RebuildUi()
+	{
+		Ctx.DockPanel.Children.Clear();
 	}
 
 	public void AddContentToWindow(Control control)

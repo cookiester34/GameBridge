@@ -8,35 +8,40 @@ public static class DataManager
 {
 	private const string DataFileName = "data.json";
 	private static UserData? userData;
+
+	private static string AppDir =>
+		Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GameBridge");
+
+	private static string DataPath => Path.Combine(AppDir, DataFileName);
+
 	public static UserData UserData
 	{
 		get => userData ??= LoadData();
 		private set => userData = value;
 	}
 
-	//TODO: make this check that even if the file exists that there is data there
-	public static bool DoesSaveDataExist() => File.Exists(DataFileName);
+	public static bool DoesSaveDataExist() => File.Exists(DataPath);
 
 	public static void SaveData()
 	{
+		Directory.CreateDirectory(AppDir); // make sure folder exists
 		var json = JsonSerializer.Serialize(UserData, new JsonSerializerOptions { WriteIndented = true });
-		File.WriteAllText(DataFileName, json);
+		File.WriteAllText(DataPath, json);
 	}
 
 	public static UserData LoadData()
 	{
-		// return CreateNewUserData();
-		if (!File.Exists(DataFileName))
-		{
+		Directory.CreateDirectory(AppDir);
+
+		if (!File.Exists(DataPath))
 			return CreateNewUserData();
-		}
 
 		try
 		{
-			var json = File.ReadAllText(DataFileName);
-			return UserData = JsonSerializer.Deserialize<UserData>(json);
+			var json = File.ReadAllText(DataPath);
+			return UserData = JsonSerializer.Deserialize<UserData>(json) ?? CreateNewUserData();
 		}
-		catch (Exception _)
+		catch
 		{
 			return CreateNewUserData();
 		}
@@ -45,17 +50,9 @@ public static class DataManager
 	private static UserData CreateNewUserData()
 	{
 		UserData = new UserData();
-		userData.GameBridgeSaveDirectory = GetAppDirectory();
+		userData.GameBridgeSaveDirectory = AppDir;
 		return userData;
 	}
 
-	public static string GetAppDirectory()
-	{
-		var gameBridgeSaveDirectory = UserData.GameBridgeSaveDirectory;
-		if (!string.IsNullOrWhiteSpace(gameBridgeSaveDirectory))
-		{
-			return Path.Combine(gameBridgeSaveDirectory, DataFileName);
-		}
-		return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DataFileName);
-	}
+	public static string GetAppDirectory() => AppDir;
 }
